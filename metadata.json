@@ -1,0 +1,6 @@
+{
+  "name": "WB Madhyamik Study Companion",
+  "description": "Expert AI educational tutor and practice companion for WBBSE Class 10 Madhyamik examination across all 7 subjects with quizzes, study facts, memory tricks, and syllabus preparation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

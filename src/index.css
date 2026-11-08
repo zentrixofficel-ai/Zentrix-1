@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-navy: #142B52;
+    --color-navy-dark: #0D1C36;
+    --color-navy-light: #1E3A6C;
+    --color-royal: #3867E8;
+    --color-royal-dark: #2752CA;
+    --color-royal-light: #EEF2FD;
+    --color-teal: #18A889;
+    --color-teal-dark: #12836B;
+    --color-teal-light: #E8F7F4;
+    --color-bg: #F5F7FB;
+    --color-card: #FFFFFF;
+    --color-border: #E5EAF2;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--color-bg);
+    color: #1A2434;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom scrollbar for desktop */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Animations */
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Utility classes for theme colors */
+.bg-navy-main { background-color: #142B52; }
+.bg-navy-dark { background-color: #0D1C36; }
+.text-navy-main { color: #142B52; }
+.border-navy-main { border-color: #142B52; }
+
+.bg-royal-main { background-color: #3867E8; }
+.hover\:bg-royal-dark:hover { background-color: #2752CA; }
+.text-royal-main { color: #3867E8; }
+.bg-royal-light { background-color: #EEF2FD; }
+.border-royal-main { border-color: #3867E8; }
+
+.bg-teal-main { background-color: #18A889; }
+.hover\:bg-teal-dark:hover { background-color: #12836B; }
+.text-teal-main { color: #18A889; }
+.bg-teal-light { background-color: #E8F7F4; }
+.border-teal-main { border-color: #18A889; }
+
+.bg-page-soft { background-color: #F5F7FB; }

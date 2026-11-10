@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Question, SubjectId, PracticeSet } from "../types";
+import { Question, SubjectId, PracticeSet, HistoryItem, BookmarkItem } from "../types";
 import { SUBJECTS, SYLLABUS_MAP, SAMPLE_QUESTIONS } from "../data/madhyamikData";
 import confetti from "canvas-confetti";
 import {
@@ -21,6 +21,8 @@ import {
   Trophy,
   Award,
   Share2,
+  Bookmark,
+  BookmarkCheck,
 } from "lucide-react";
 
 interface InteractiveQuizProps {
@@ -28,6 +30,8 @@ interface InteractiveQuizProps {
   onSelectSubject: (sub: SubjectId) => void;
   langMode: "bengali" | "english" | "both";
   onRecordScore: (isCorrect: boolean) => void;
+  onLogHistory?: (item: HistoryItem) => void;
+  onAddBookmark?: (bookmark: BookmarkItem) => void;
 }
 
 export const InteractiveQuiz: React.FC<InteractiveQuizProps> = ({
@@ -35,9 +39,12 @@ export const InteractiveQuiz: React.FC<InteractiveQuizProps> = ({
   onSelectSubject,
   langMode,
   onRecordScore,
+  onLogHistory,
+  onAddBookmark,
 }) => {
   const selectedSubject = SUBJECTS.find((s) => s.id === currentSubject) || SUBJECTS[0];
   const chapters = SYLLABUS_MAP[currentSubject] || [];
+  const [bookmarkedQuestions, setBookmarkedQuestions] = useState<Record<string, boolean>>({});
 
   // Quiz filters & questions state
   const [selectedChapter, setSelectedChapter] = useState<string>("all");
@@ -112,7 +119,35 @@ export const InteractiveQuiz: React.FC<InteractiveQuizProps> = ({
     if (answeredCount >= filteredQuestions.length && filteredQuestions.length > 0) {
       setTimeout(() => {
         setShowSummary(true);
+        if (onLogHistory) {
+          const currentTotalCorrect = totalCorrect + (isRight ? 1 : 0);
+          onLogHistory({
+            id: "hist_quiz_" + Date.now(),
+            type: "quiz_attempt",
+            title: `${selectedSubject.nameBn} - কুইজ অনুশীলন (${filteredQuestions.length}টি প্রশ্ন)`,
+            subject: currentSubject,
+            subjectNameBn: selectedSubject.nameBn,
+            timestamp: new Date().toISOString(),
+            score: { correct: currentTotalCorrect, total: filteredQuestions.length },
+            details: `টপিক: ${currentQ.topic || selectedSubject.nameBn}, নির্ভুলতা: ${Math.round((currentTotalCorrect / filteredQuestions.length) * 100)}%`,
+          });
+        }
       }, 1500);
+    }
+  };
+
+  const handleToggleBookmark = (q: Question) => {
+    const isBookmarked = bookmarkedQuestions[q.id];
+    setBookmarkedQuestions((prev) => ({ ...prev, [q.id]: !isBookmarked }));
+    if (!isBookmarked && onAddBookmark) {
+      onAddBookmark({
+        id: "bm_" + q.id + "_" + Date.now(),
+        type: "question",
+        title: q.question.slice(0, 90) + (q.question.length > 90 ? "..." : ""),
+        content: `সঠিক উত্তর: ${q.correctAnswer}\nব্যাখ্যা: ${q.explanation}`,
+        subject: currentSubject,
+        createdAt: new Date().toISOString(),
+      });
     }
   };
 
@@ -460,10 +495,26 @@ export const InteractiveQuiz: React.FC<InteractiveQuizProps> = ({
 
               <button
                 onClick={() => speakText(currentQ.question)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
                 title="প্রশ্ন শুনুন"
               >
                 <Volume2 className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => handleToggleBookmark(currentQ)}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                  bookmarkedQuestions[currentQ.id]
+                    ? "text-amber-500 bg-amber-50"
+                    : "text-slate-400 hover:text-amber-500 hover:bg-slate-100"
+                }`}
+                title={bookmarkedQuestions[currentQ.id] ? "বুকমার্ক সংরক্ষিত" : "বুকমার্ক করুন"}
+              >
+                {bookmarkedQuestions[currentQ.id] ? (
+                  <BookmarkCheck className="w-4 h-4 fill-amber-500 text-amber-500" />
+                ) : (
+                  <Bookmark className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>

@@ -16,6 +16,9 @@ export type NavTab =
   | "memory"
   | "syllabus"
   | "formula_book"
+  | "history"
+  | "notes"
+  | "bookmarks"
   | "settings";
 
 export interface SubjectInfo {
@@ -105,4 +108,58 @@ export interface StudentProfile {
   dailyGoal: number; // e.g. 15 questions per day
   streakDays: number;
   lastActiveDate: string;
+  targetYear?: number;
+  avatarEmoji?: string;
+}
+
+export interface HistoryItem {
+  id: string;
+  type: "quiz_attempt" | "tutor_query" | "evaluator_check" | "chapter_read" | "note_created";
+  title: string;
+  subject: SubjectId;
+  subjectNameBn: string;
+  timestamp: string; // ISO string
+  score?: { correct: number; total: number };
+  details?: string;
+  tags?: string[];
+}
+
+export interface StudyNote {
+  id: string;
+  title: string;
+  content: string;
+  subject: SubjectId;
+  chapter?: string;
+  updatedAt: string;
+  tags?: string[];
+}
+
+export interface BookmarkItem {
+  id: string;
+  type: "question" | "formula" | "fact" | "note";
+  title: string;
+  content: string;
+  subject: SubjectId;
+  createdAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  type: "reminder" | "quiz" | "achievement" | "info";
+  linkTab?: NavTab;
+}
+
+export interface UserAuthProfile {
+  uid: string;
+  displayName: string;
+  email?: string;
+  photoURL?: string;
+  isGuest: boolean;
+  avatarEmoji: string;
+  targetYear: number;
+  classGrade: string;
 }

@@ -1,0 +1,70 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "isGuest": { "type": "boolean" },
+        "avatarEmoji": { "type": "string" },
+        "targetYear": { "type": "number" },
+        "classGrade": { "type": "string" }
+      },
+      "required": ["uid", "displayName", "isGuest"]
+    },
+    "history": {
+      "title": "HistoryItem",
+      "description": "Study history records for quizzes, queries, and learning",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "subjectNameBn": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "score": {
+          "type": "object",
+          "properties": {
+            "correct": { "type": "number" },
+            "total": { "type": "number" }
+          }
+        },
+        "details": { "type": "string" }
+      },
+      "required": ["id", "type", "title", "subject", "timestamp"]
+    },
+    "notes": {
+      "title": "StudyNote",
+      "description": "Personal student study notes",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "subject": { "type": "string" },
+        "chapter": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "title", "content", "subject", "updatedAt"]
+    },
+    "bookmarks": {
+      "title": "BookmarkItem",
+      "description": "Saved questions, formulas, and facts",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "subject": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "type", "title", "content", "subject", "createdAt"]
+    }
+  }
+}

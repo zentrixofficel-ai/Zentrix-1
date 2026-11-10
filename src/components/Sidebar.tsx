@@ -1,5 +1,5 @@
 import React from "react";
-import { NavTab, SubjectId } from "../types";
+import { NavTab, SubjectId, UserAuthProfile } from "../types";
 import { SUBJECTS } from "../data/madhyamikData";
 import {
   LayoutDashboard,
@@ -11,12 +11,20 @@ import {
   CheckSquare,
   BookOpen,
   Settings,
-  GraduationCap,
   Flame,
   ChevronRight,
   Menu,
   X,
-  Languages,
+  History,
+  Bookmark,
+  Bell,
+  User,
+  LogOut,
+  LogIn,
+  Moon,
+  Sun,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -30,6 +38,12 @@ interface SidebarProps {
   streakDays: number;
   mobileMenuOpen: boolean;
   onToggleMobileMenu: () => void;
+  unreadNotificationsCount?: number;
+  onOpenNotifications: () => void;
+  onOpenProfile: () => void;
+  userProfile: UserAuthProfile;
+  isDarkMode: boolean;
+  onToggleDarkMode: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -43,41 +57,71 @@ export const Sidebar: React.FC<SidebarProps> = ({
   streakDays,
   mobileMenuOpen,
   onToggleMobileMenu,
+  unreadNotificationsCount = 0,
+  onOpenNotifications,
+  onOpenProfile,
+  userProfile,
+  isDarkMode,
+  onToggleDarkMode,
 }) => {
-  const navItems: { id: NavTab; labelBn: string; labelEn: string; icon: React.FC<{ className?: string }>; badge?: string }[] = [
+  const primaryNavItems: {
+    id: NavTab;
+    labelBn: string;
+    labelEn: string;
+    icon: React.FC<{ className?: string }>;
+    badge?: string;
+  }[] = [
     { id: "dashboard", labelBn: "ড্যাশবোর্ড", labelEn: "Dashboard", icon: LayoutDashboard },
     { id: "quiz", labelBn: "অনুশীলন কুইজ", labelEn: "Practice Quiz", icon: HelpCircle, badge: "MCQ" },
     { id: "questions", labelBn: "প্রশ্ন সম্ভার", labelEn: "Question Bank", icon: BookMarked },
     { id: "tutor", labelBn: "AI মাস্টারমশাই", labelEn: "AI Tutor", icon: Bot, badge: "AI" },
     { id: "evaluator", labelBn: "উত্তরপত্র মূল্যায়ন", labelEn: "Answer Evaluator", icon: FileCheck },
     { id: "memory", labelBn: "স্মরণিকা ও ট্রিকস", labelEn: "Memory Hub", icon: Brain },
-    { id: "syllabus", labelBn: "সিলেবাস ট্র্যাকার", labelEn: "Syllabus Tracker", icon: CheckSquare },
     { id: "formula_book", labelBn: "ফর্মুলা বুক", labelEn: "Formula Book", icon: BookOpen },
+    { id: "syllabus", labelBn: "সিলেবাস ট্র্যাকার", labelEn: "Syllabus Tracker", icon: CheckSquare },
+  ];
+
+  const secondaryNavItems: {
+    id: NavTab;
+    labelBn: string;
+    labelEn: string;
+    icon: React.FC<{ className?: string }>;
+    badge?: string;
+  }[] = [
+    { id: "history", labelBn: "অধ্যয়ন ইতিহাস", labelEn: "Study History", icon: History },
+    { id: "notes", labelBn: "স্টাডি নোটস", labelEn: "Notes", icon: FileText },
+    { id: "bookmarks", labelBn: "সংরক্ষিত বুকমার্ক", labelEn: "Bookmarks", icon: Bookmark },
     { id: "settings", labelBn: "সেটিংস", labelEn: "Settings", icon: Settings },
   ];
 
   const accuracy = quizScore.total > 0 ? Math.round((quizScore.correct / quizScore.total) * 100) : 0;
 
+  const handleNavClick = (tabId: NavTab) => {
+    onSelectTab(tabId);
+    if (mobileMenuOpen) onToggleMobileMenu();
+  };
+
   return (
     <>
       {/* Mobile Top App Bar */}
-      <div className="lg:hidden sticky top-0 z-40 bg-[#142B52] text-white px-4 py-3 flex items-center justify-between border-b border-[#1E3A6C] shadow-sm">
+      <div className="lg:hidden sticky top-0 z-40 bg-[#142B52] dark:bg-[#0D1C36] text-white px-4 py-3 flex items-center justify-between border-b border-[#1E3A6C] shadow-sm">
         <div className="flex items-center gap-2.5">
           <button
             onClick={onToggleMobileMenu}
-            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
             aria-label="Toggle Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#3867E8] to-[#18A889] flex items-center justify-center text-white font-black text-sm shadow-xs font-mono tracking-tighter">
+
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleNavClick("dashboard")}>
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#3867E8] to-[#18A889] flex items-center justify-center text-white font-black text-sm shadow-xs font-mono tracking-tighter">
               Zx
             </div>
             <div>
               <div className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-                <span>zentix WB</span>
-                <span className="text-[10px] bg-[#18A889] text-white px-1.5 py-0.2 rounded font-semibold font-mono">
+                <span>ZENTIX WB</span>
+                <span className="text-[9px] bg-[#18A889] text-white px-1 py-0.2 rounded font-semibold font-mono">
                   Zx
                 </span>
               </div>
@@ -86,26 +130,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Notifications Bell */}
+          <button
+            onClick={onOpenNotifications}
+            className="relative p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+            title="বিজ্ঞপ্তি"
+          >
+            <Bell className="w-4 h-4" />
+            {unreadNotificationsCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-extrabold flex items-center justify-center">
+                {unreadNotificationsCount}
+              </span>
+            )}
+          </button>
+
           {/* Daily Streak */}
-          <div className="flex items-center gap-1 bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full text-xs font-semibold border border-amber-400/30">
+          <div className="flex items-center gap-1 bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full text-xs font-semibold border border-amber-400/30 font-mono">
             <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
             <span>{streakDays}d</span>
           </div>
 
-          {/* Lang toggle */}
+          {/* Profile Avatar */}
           <button
-            onClick={() => onChangeLangMode(langMode === "bengali" ? "english" : langMode === "english" ? "both" : "bengali")}
-            className="text-[11px] px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-white font-medium"
-            title="ভাষা পরিবর্তন"
+            onClick={onOpenProfile}
+            className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm cursor-pointer border border-white/20"
+            title="প্রোফাইল"
           >
-            {langMode === "bengali" ? "বাংলা" : langMode === "english" ? "EN" : "উভয়"}
+            {userProfile.avatarEmoji || "🎓"}
           </button>
         </div>
       </div>
 
-      {/* Desktop Sidebar (and Mobile Drawer) */}
+      {/* Backdrop for mobile drawer */}
+      {mobileMenuOpen && (
+        <div
+          onClick={onToggleMobileMenu}
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs animate-fadeIn"
+        />
+      )}
+
+      {/* Desktop Sidebar & Mobile Drawer */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#142B52] text-white flex flex-col justify-between transition-transform duration-300 ease-in-out border-r border-[#1E3A6C] lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#142B52] dark:bg-[#0D1C36] text-white flex flex-col justify-between transition-transform duration-300 ease-in-out border-r border-[#1E3A6C] lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -113,16 +179,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Brand Header */}
           <div className="p-5 border-b border-[#1E3A6C]">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => handleNavClick("dashboard")}
+              >
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#3867E8] to-[#18A889] flex items-center justify-center text-white shadow-md font-mono font-black text-lg tracking-tighter">
                   Zx
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h1 className="text-base font-extrabold text-white tracking-tight leading-tight">
-                      zentix WB
+                      ZENTIX WB
                     </h1>
-                    <span className="text-[10px] bg-[#18A889] text-white px-1 rounded font-bold font-mono">
+                    <span className="text-[10px] bg-[#18A889] text-white px-1.5 py-0.2 rounded font-bold font-mono">
                       Zx
                     </span>
                   </div>
@@ -132,86 +201,172 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
 
-              <button
-                onClick={onToggleMobileMenu}
-                className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center gap-1">
+                {/* Dark mode button */}
+                <button
+                  onClick={onToggleDarkMode}
+                  className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                  title={isDarkMode ? "Light Mode" : "Dark Mode"}
+                >
+                  {isDarkMode ? <Sun className="w-4 h-4 text-amber-300" /> : <Moon className="w-4 h-4" />}
+                </button>
+
+                <button
+                  onClick={onToggleMobileMenu}
+                  className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            {/* Quick Student Streak & Accuracy Bar */}
-            <div className="mt-4 p-2.5 rounded-xl bg-[#0D1C36]/70 border border-[#1E3A6C] flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5">
-                <Flame className="w-4 h-4 text-amber-400 fill-amber-400" />
-                <span className="text-slate-300 font-medium">স্ট্রিক:</span>
-                <span className="font-bold text-amber-300 font-mono">{streakDays} দিন</span>
+            {/* Student Profile Quick Strip */}
+            <div
+              onClick={() => {
+                onOpenProfile();
+                if (mobileMenuOpen) onToggleMobileMenu();
+              }}
+              className="mt-4 p-2.5 rounded-2xl bg-[#0D1C36]/80 dark:bg-black/30 border border-[#1E3A6C] flex items-center justify-between cursor-pointer hover:border-[#3867E8] transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">{userProfile.avatarEmoji || "🎓"}</span>
+                <div>
+                  <div className="text-xs font-bold text-white truncate max-w-[120px]">
+                    {userProfile.displayName}
+                  </div>
+                  <div className="text-[10px] text-slate-400 font-mono">
+                    {userProfile.isGuest ? "অতিথি মোড" : "ক্লাউড সিঙ্ক"} • {userProfile.targetYear}
+                  </div>
+                </div>
               </div>
-              <div className="text-slate-400">|</div>
-              <div className="flex items-center gap-1">
-                <span className="text-slate-300 font-medium">নির্ভুলতা:</span>
-                <span className="font-bold text-[#18A889] font-mono">{accuracy}%</span>
+
+              <div className="flex items-center gap-1 text-[11px] font-bold text-amber-300 font-mono bg-amber-400/10 px-2 py-0.5 rounded-lg border border-amber-400/20">
+                <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                <span>{streakDays}d</span>
               </div>
             </div>
           </div>
 
-          {/* Main Navigation Links */}
+          {/* Primary Navigation */}
           <div className="p-3 space-y-1">
-            <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              মেনু (Navigation)
+            <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+              মূল মেন্যু (Core)
             </div>
 
-            {navItems.map((item) => {
-              const Icon = item.icon;
+            {primaryNavItems.map((item) => {
               const isActive = activeTab === item.id;
-
+              const Icon = item.icon;
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    onSelectTab(item.id);
-                    if (mobileMenuOpen) onToggleMobileMenu();
-                  }}
-                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-semibold transition-all group ${
+                  onClick={() => handleNavClick(item.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isActive
-                      ? "bg-[#3867E8] text-white shadow-sm"
+                      ? "bg-gradient-to-r from-[#3867E8] to-[#2752CA] text-white shadow-sm"
                       : "text-slate-300 hover:bg-white/10 hover:text-white"
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400 group-hover:text-white"}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
                     <span>{item.labelBn}</span>
-                    <span className={`text-[10px] ${isActive ? "text-blue-100" : "text-slate-400"}`}>
-                      ({item.labelEn})
-                    </span>
                   </div>
 
-                  {item.badge && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-[#18A889]/20 text-[#18A889] border border-[#18A889]/30"
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {item.badge && (
+                      <span
+                        className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase font-mono ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : item.badge === "AI"
+                            ? "bg-[#18A889] text-white"
+                            : "bg-[#3867E8]/30 text-blue-200"
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                    {isActive && <ChevronRight className="w-3.5 h-3.5" />}
+                  </div>
                 </button>
               );
             })}
           </div>
 
-          {/* Quick Subject Switcher */}
-          <div className="p-3 mt-1 border-t border-[#1E3A6C]/80">
-            <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-              <span>সাতটি বিষয় (7 Subjects)</span>
+          {/* Secondary Tools Navigation */}
+          <div className="p-3 pt-0 space-y-1">
+            <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+              স্টাডি টুলস ও তথ্য (Tools)
             </div>
 
-            <div className="grid grid-cols-1 gap-1">
+            {secondaryNavItems.map((item) => {
+              const isActive = activeTab === item.id;
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    isActive
+                      ? "bg-gradient-to-r from-[#3867E8] to-[#2752CA] text-white shadow-sm"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-400"}`} />
+                    <span>{item.labelBn}</span>
+                  </div>
+
+                  {isActive && <ChevronRight className="w-3.5 h-3.5" />}
+                </button>
+              );
+            })}
+
+            {/* Notifications Item in Drawer */}
+            <button
+              onClick={() => {
+                onOpenNotifications();
+                if (mobileMenuOpen) onToggleMobileMenu();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <Bell className="w-4 h-4 text-slate-400" />
+                <span>বিজ্ঞপ্তি ও নোটিফিকেশন</span>
+              </div>
+              {unreadNotificationsCount > 0 && (
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full font-bold bg-rose-500 text-white font-mono">
+                  {unreadNotificationsCount}
+                </span>
+              )}
+            </button>
+
+            {/* Profile Item in Drawer */}
+            <button
+              onClick={() => {
+                onOpenProfile();
+                if (mobileMenuOpen) onToggleMobileMenu();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <User className="w-4 h-4 text-slate-400" />
+                <span>প্রোফাইল বিবরণী</span>
+              </div>
+              <span className="text-[11px] text-slate-400 font-mono">
+                {userProfile.isGuest ? "Guest" : "User"}
+              </span>
+            </button>
+          </div>
+
+          {/* Subjects List Shortcut */}
+          <div className="p-3 pt-0 space-y-1">
+            <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+              সাতটি বিষয় (WBBSE Subjects)
+            </div>
+
+            <div className="grid grid-cols-2 gap-1 px-1">
               {SUBJECTS.map((sub) => {
                 const isSelected = sub.id === currentSubject;
-
                 return (
                   <button
                     key={sub.id}
@@ -219,18 +374,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onSelectSubject(sub.id);
                       if (mobileMenuOpen) onToggleMobileMenu();
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors ${
+                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold text-left truncate transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-white/15 text-white font-bold border-l-3 border-[#18A889]"
-                        : "text-slate-300 hover:bg-white/5 hover:text-white"
+                        ? "bg-[#18A889] text-white font-black shadow-2xs"
+                        : "bg-white/5 text-slate-300 hover:bg-white/10"
                     }`}
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      <span className="w-2 h-2 rounded-full bg-[#18A889]" />
-                      <span className="truncate">{sub.nameBn}</span>
-                      <span className="text-[10px] text-slate-400">({sub.nameEn})</span>
-                    </div>
-                    {isSelected && <ChevronRight className="w-3.5 h-3.5 text-[#18A889]" />}
+                    {sub.nameBn}
                   </button>
                 );
               })}
@@ -238,102 +388,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-[#1E3A6C] bg-[#0D1C36]/50">
-          <div className="flex items-center justify-between text-xs text-slate-300">
-            <div className="flex items-center gap-1.5">
-              <Languages className="w-4 h-4 text-slate-400" />
-              <span>ভাষা:</span>
-            </div>
+        {/* Bottom Drawer Footer */}
+        <div className="p-4 border-t border-[#1E3A6C] bg-[#0D1C36]/90 flex items-center justify-between text-xs">
+          <button
+            onClick={() => {
+              onOpenProfile();
+              if (mobileMenuOpen) onToggleMobileMenu();
+            }}
+            className="flex items-center gap-1.5 text-slate-300 hover:text-white transition-colors cursor-pointer"
+          >
+            {userProfile.isGuest ? (
+              <>
+                <LogIn className="w-3.5 h-3.5 text-[#3867E8]" />
+                <span className="font-bold">সাইন ইন করুন</span>
+              </>
+            ) : (
+              <>
+                <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                <span className="font-bold">সাইন আউট</span>
+              </>
+            )}
+          </button>
 
-            <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-lg text-[11px]">
-              <button
-                onClick={() => onChangeLangMode("both")}
-                className={`px-2 py-0.5 rounded ${
-                  langMode === "both" ? "bg-[#3867E8] text-white font-bold" : "text-slate-300 hover:text-white"
-                }`}
-              >
-                উভয়
-              </button>
-              <button
-                onClick={() => onChangeLangMode("bengali")}
-                className={`px-2 py-0.5 rounded ${
-                  langMode === "bengali" ? "bg-[#3867E8] text-white font-bold" : "text-slate-300 hover:text-white"
-                }`}
-              >
-                বাংলা
-              </button>
-              <button
-                onClick={() => onChangeLangMode("english")}
-                className={`px-2 py-0.5 rounded ${
-                  langMode === "english" ? "bg-[#3867E8] text-white font-bold" : "text-slate-300 hover:text-white"
-                }`}
-              >
-                EN
-              </button>
-            </div>
+          <div className="text-[10px] font-mono text-slate-400">
+            v2.0 • ZENTIX WB
           </div>
         </div>
       </aside>
-
-      {/* Mobile Backdrop overlay */}
-      {mobileMenuOpen && (
-        <div
-          onClick={onToggleMobileMenu}
-          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-xs transition-opacity"
-        />
-      )}
-
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 px-3 py-2 flex items-center justify-around shadow-lg">
-        <button
-          onClick={() => onSelectTab("dashboard")}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
-            activeTab === "dashboard" ? "text-[#3867E8]" : "text-slate-500"
-          }`}
-        >
-          <LayoutDashboard className="w-5 h-5" />
-          <span>ড্যাশবোর্ড</span>
-        </button>
-
-        <button
-          onClick={() => onSelectTab("quiz")}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
-            activeTab === "quiz" ? "text-[#3867E8]" : "text-slate-500"
-          }`}
-        >
-          <HelpCircle className="w-5 h-5" />
-          <span>কুইজ</span>
-        </button>
-
-        <button
-          onClick={() => onSelectTab("tutor")}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
-            activeTab === "tutor" ? "text-[#3867E8]" : "text-slate-500"
-          }`}
-        >
-          <Bot className="w-5 h-5 text-[#18A889]" />
-          <span>AI মাস্টার</span>
-        </button>
-
-        <button
-          onClick={() => onSelectTab("questions")}
-          className={`flex flex-col items-center gap-1 text-[10px] font-bold ${
-            activeTab === "questions" ? "text-[#3867E8]" : "text-slate-500"
-          }`}
-        >
-          <BookMarked className="w-5 h-5" />
-          <span>প্রশ্ন সম্ভার</span>
-        </button>
-
-        <button
-          onClick={onToggleMobileMenu}
-          className="flex flex-col items-center gap-1 text-[10px] font-bold text-slate-500"
-        >
-          <Menu className="w-5 h-5" />
-          <span>মেনু</span>
-        </button>
-      </nav>
     </>
   );
 };

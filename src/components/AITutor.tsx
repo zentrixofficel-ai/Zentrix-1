@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { SubjectId } from "../types";
+import { SubjectId, HistoryItem } from "../types";
 import { SUBJECTS, SYLLABUS_MAP } from "../data/madhyamikData";
 import {
   Send,
@@ -21,6 +21,7 @@ interface AITutorProps {
   currentSubject: SubjectId;
   onSelectSubject: (sub: SubjectId) => void;
   langMode: "bengali" | "english" | "both";
+  onLogHistory?: (item: HistoryItem) => void;
 }
 
 interface Message {
@@ -79,6 +80,7 @@ export const AITutor: React.FC<AITutorProps> = ({
   currentSubject,
   onSelectSubject,
   langMode,
+  onLogHistory,
 }) => {
   const selectedSubject = SUBJECTS.find((s) => s.id === currentSubject) || SUBJECTS[0];
   const chapters = SYLLABUS_MAP[currentSubject] || [];
@@ -146,6 +148,18 @@ export const AITutor: React.FC<AITutorProps> = ({
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, modelMsg]);
+
+      if (onLogHistory) {
+        onLogHistory({
+          id: "hist_tutor_" + Date.now(),
+          type: "tutor_query",
+          title: `${selectedSubject.nameBn} - AI প্রশ্ন: "${text.slice(0, 60)}${text.length > 60 ? "..." : ""}"`,
+          subject: currentSubject,
+          subjectNameBn: selectedSubject.nameBn,
+          timestamp: new Date().toISOString(),
+          details: (data.reply || "").slice(0, 140) + "...",
+        });
+      }
     } catch (err: any) {
       console.error(err);
       const errMsg: Message = {

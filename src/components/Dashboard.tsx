@@ -1,5 +1,5 @@
-import React from "react";
-import { NavTab, SubjectId, SubjectInfo } from "../types";
+import React, { useState } from "react";
+import { NavTab, SubjectId, HistoryItem, UserAuthProfile } from "../types";
 import { SUBJECTS, SYLLABUS_MAP } from "../data/madhyamikData";
 import {
   Calendar,
@@ -26,6 +26,10 @@ import {
   Smartphone,
   ExternalLink,
   X,
+  History,
+  FileText,
+  Mic,
+  Play,
 } from "lucide-react";
 
 interface DashboardProps {
@@ -35,6 +39,10 @@ interface DashboardProps {
   quizScore: { correct: number; total: number };
   streakDays: number;
   dailyGoal: number;
+  recentHistory?: HistoryItem[];
+  userProfile: UserAuthProfile;
+  onOpenVoiceAssistant: () => void;
+  onOpenProfile: () => void;
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
@@ -44,8 +52,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   quizScore,
   streakDays,
   dailyGoal = 15,
+  recentHistory = [],
+  userProfile,
+  onOpenVoiceAssistant,
+  onOpenProfile,
 }) => {
-  const [showDownloadModal, setShowDownloadModal] = React.useState<boolean>(false);
+  const [showDownloadModal, setShowDownloadModal] = useState<boolean>(false);
+
   // Approximate days left for Madhyamik exam (mid-February)
   const today = new Date();
   const examYear = today.getMonth() > 2 ? today.getFullYear() + 1 : today.getFullYear();
@@ -69,21 +82,21 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const getSubjectIcon = (iconName: string) => {
     switch (iconName) {
       case "BookOpen":
-        return <BookOpen className="w-5 h-5 text-purple-600" />;
+        return <BookOpen className="w-5 h-5 text-purple-600 dark:text-purple-400" />;
       case "Languages":
-        return <Languages className="w-5 h-5 text-blue-600" />;
+        return <Languages className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
       case "Calculator":
-        return <Calculator className="w-5 h-5 text-amber-600" />;
+        return <Calculator className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
       case "Atom":
-        return <Atom className="w-5 h-5 text-sky-600" />;
+        return <Atom className="w-5 h-5 text-sky-600 dark:text-sky-400" />;
       case "Dna":
-        return <Dna className="w-5 h-5 text-emerald-600" />;
+        return <Dna className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />;
       case "Scroll":
-        return <Scroll className="w-5 h-5 text-rose-600" />;
+        return <Scroll className="w-5 h-5 text-rose-600 dark:text-rose-400" />;
       case "Globe":
-        return <Globe className="w-5 h-5 text-teal-600" />;
+        return <Globe className="w-5 h-5 text-teal-600 dark:text-teal-400" />;
       default:
-        return <BookOpen className="w-5 h-5 text-indigo-600" />;
+        return <BookOpen className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />;
     }
   };
 
@@ -96,19 +109,31 @@ export const Dashboard: React.FC<DashboardProps> = ({
       {/* Hero Welcome Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#142B52] via-[#1E3A6C] to-[#2752CA] text-white p-6 md:p-8 shadow-md">
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-amber-300 border border-white/15">
-              <span className="font-mono bg-white/20 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">Zx</span>
-              <span>zentix WB • পশ্চিমবঙ্গ মধ্যশিক্ষা পর্ষদ (WBBSE)</span>
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-amber-300 border border-white/15">
+                <span className="font-mono bg-white/20 text-white px-1.5 py-0.2 rounded text-[10px] font-bold">
+                  Zx
+                </span>
+                <span>ZENTIX WB • WBBSE দশম শ্রেণি</span>
+              </div>
+
+              <div
+                onClick={onOpenProfile}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 hover:bg-white/25 cursor-pointer backdrop-blur-md text-xs font-bold text-white transition-colors"
+              >
+                <span>{userProfile.avatarEmoji}</span>
+                <span>{userProfile.displayName}</span>
+                <span className="text-emerald-300 text-[10px]">({userProfile.targetYear})</span>
+              </div>
             </div>
 
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight leading-snug">
-              নমস্কার, zentix WB-তে স্বাগত! 🌟
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight leading-snug">
+              নমস্কার {userProfile.displayName}, ZENTIX WB-তে স্বাগত! 🌟
             </h1>
 
             <p className="text-xs md:text-sm text-slate-200 leading-relaxed font-sans">
-              আজকের মাধ্যমিক প্রস্তুতিতে সম্পূর্ণ মনোযোগ দাও। সাতটি বিষয়ের অধ্যায়ভিত্তিক প্রশ্ন অনুশীলন, 
-              AI মাস্টারমশাইয়ের সাহায্যে সন্দেহ মোচন এবং নিয়মিত রিভিশন তোমার কাঙ্ক্ষিত ফল নিশ্চিত করবে।
+              আজকের মাধ্যমিক প্রস্তুতি শুরু করো। সাতটি বিষয়ের অধ্যায়ভিত্তিক প্রশ্ন, AI মাস্টারমশাই ও ভয়েস অ্যাসিস্ট্যান্ট তোমার সাথে আছে।
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -117,7 +142,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 className="px-5 py-2.5 bg-[#18A889] hover:bg-[#12836B] text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Zap className="w-4 h-4 fill-white text-white" />
-                অনুশীলন শুরু করুন
+                <span>দৈনিক কুইজ শুরু করুন</span>
+              </button>
+
+              <button
+                onClick={onOpenVoiceAssistant}
+                className="px-4 py-2.5 bg-gradient-to-r from-[#3867E8] to-[#1E3A6C] hover:opacity-95 text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-white/20"
+              >
+                <Mic className="w-4 h-4 text-emerald-300 animate-pulse" />
+                <span>AI ভয়েস সহকারী</span>
               </button>
 
               <button
@@ -125,7 +158,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-xs md:text-sm backdrop-blur-sm border border-white/20 transition-all flex items-center gap-2 cursor-pointer"
               >
                 <Bot className="w-4 h-4 text-emerald-300" />
-                মাস্টারমশাইকে প্রশ্ন করো
+                <span>AI মাস্টারমশাই</span>
               </button>
 
               <button
@@ -133,13 +166,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
-                <span>অ্যাপ ডাউনলোড (APK)</span>
+                <span>অ্যান্ড্রয়েড অ্যাপ (APK)</span>
               </button>
             </div>
           </div>
 
           {/* Exam Countdown Card */}
-          <div className="bg-[#0D1C36]/80 backdrop-blur-md p-5 rounded-2xl border border-white/15 min-w-[240px] text-center space-y-3 self-start lg:self-auto">
+          <div className="bg-[#0D1C36]/85 backdrop-blur-md p-5 rounded-3xl border border-white/15 min-w-[240px] text-center space-y-3 self-start lg:self-auto shadow-xl">
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-amber-300 uppercase tracking-wider">
               <Calendar className="w-4 h-4" />
               <span>মাধ্যমিক পরীক্ষা বাকি</span>
@@ -152,222 +185,259 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <span className="text-sm font-semibold text-slate-300">দিন</span>
             </div>
 
-            <div className="text-[11px] text-emerald-300 font-medium bg-emerald-500/15 py-1 px-2.5 rounded-lg border border-emerald-400/20">
-              ✓ প্রতিদিন ধারাবাহিক রিভিশনই সাফল্যের চাবিকাঠি
+            <div className="text-[11px] text-emerald-300 font-medium bg-emerald-500/15 py-1.5 px-3 rounded-xl border border-emerald-400/20">
+              ✓ লক্ষ্য: প্রতিটি বিষয়ে ৯০%+ নম্বর
             </div>
           </div>
         </div>
-
-        {/* Ambient subtle glow background elements */}
-        <div className="absolute -right-12 -bottom-12 w-64 h-64 bg-[#3867E8]/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-12 -top-12 w-64 h-64 bg-[#18A889]/20 rounded-full blur-3xl pointer-events-none" />
       </div>
 
-      {/* Student Study Overview Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
-        {/* Total Questions */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>প্রশ্ন সমাধান</span>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#3867E8] flex items-center justify-center">
+      {/* 4 Metric Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 md:gap-5">
+        {/* Streak */}
+        <div className="bg-white dark:bg-[#14203D] p-5 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">অধ্যয়ন স্ট্রিক</span>
+            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500">
+              <Flame className="w-4 h-4 fill-amber-500" />
+            </div>
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl md:text-3xl font-black font-mono text-[#142B52] dark:text-white">
+              {streakDays}
+            </span>
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">দিন চলমান 🔥</span>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-400 font-medium">প্রতিদিন কুইজ সমাধান করুন</div>
+        </div>
+
+        {/* Total Questions Practiced */}
+        <div className="bg-white dark:bg-[#14203D] p-5 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">মোট প্রশ্ন চর্চা</span>
+            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-[#3867E8]">
               <HelpCircle className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <div className="text-2xl md:text-3xl font-extrabold text-[#142B52] font-mono">
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl md:text-3xl font-black font-mono text-[#142B52] dark:text-white">
               {quizScore.total}
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">সর্বমোট অনুশীলনকৃত</div>
+            </span>
+            <span className="text-xs font-bold text-blue-600 dark:text-blue-400">টি প্রশ্ন সম্পন্ন</span>
           </div>
+          <div className="mt-2 text-[11px] text-slate-400 font-medium">সঠিক উত্তর: {quizScore.correct} টি</div>
         </div>
 
         {/* Accuracy */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>নির্ভুলতা (Accuracy)</span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-[#18A889] flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
+        <div className="bg-white dark:bg-[#14203D] p-5 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">কুইজ নির্ভুলতা</span>
+            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#18A889]">
+              <Trophy className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <div className="text-2xl md:text-3xl font-extrabold text-[#18A889] font-mono">
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl md:text-3xl font-black font-mono text-[#142B52] dark:text-white">
               {accuracy}%
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">{quizScore.correct} টি সঠিক উত্তর</div>
+            </span>
+            <span className="text-xs font-bold text-[#18A889]">
+              {accuracy >= 80 ? "চমৎকার 🎯" : accuracy >= 50 ? "উন্নতিশীল 👍" : "অনুশীলন জরুরি 📚"}
+            </span>
           </div>
+          <div className="mt-2 text-[11px] text-slate-400 font-medium">নির্ভুল উত্তর প্রদানের হার</div>
         </div>
 
-        {/* Daily Streak */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>স্টাডি স্ট্রিক</span>
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Flame className="w-4 h-4 fill-amber-500 text-amber-500" />
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="text-2xl md:text-3xl font-extrabold text-amber-600 font-mono">
-              {streakDays} দিন
-            </div>
-            <div className="text-[11px] text-slate-500 mt-0.5">ধারাবাহিক অধ্যয়ন</div>
-          </div>
-        </div>
-
-        {/* Daily Goal */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 text-xs font-semibold">
-            <span>দৈনিক লক্ষ্য (Goal)</span>
-            <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+        {/* Daily Goal Progress */}
+        <div className="bg-white dark:bg-[#14203D] p-5 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xs hover:shadow-xs transition-shadow">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">দৈনিক লক্ষ্য</span>
+            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600">
               <Target className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-3">
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl md:text-3xl font-extrabold text-[#142B52] font-mono">
-                {quizScore.total}/{dailyGoal}
-              </span>
-              <span className="text-xs font-bold text-[#18A889] font-mono">{goalProgress}%</span>
-            </div>
-            {/* Progress bar */}
-            <div className="w-full h-2 bg-slate-100 rounded-full mt-2 overflow-hidden">
-              <div
-                className="h-full bg-[#18A889] rounded-full transition-all duration-500"
-                style={{ width: `${goalProgress}%` }}
-              />
-            </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-2xl md:text-3xl font-black font-mono text-[#142B52] dark:text-white">
+              {quizScore.total}/{dailyGoal}
+            </span>
+            <span className="text-xs font-bold text-purple-600 dark:text-purple-400 font-mono">
+              {goalProgress}%
+            </span>
+          </div>
+          {/* Progress bar */}
+          <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full mt-2.5 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-[#3867E8] to-[#18A889] h-full rounded-full transition-all duration-500"
+              style={{ width: `${goalProgress}%` }}
+            />
           </div>
         </div>
       </div>
 
-      {/* Continue Learning Section */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#3867E8] to-[#142B52] flex items-center justify-center text-white shrink-0 shadow-sm">
-            {getSubjectIcon(activeSubInfo.iconName)}
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 uppercase">
-                চলমান অধ্যয়ন
+      {/* Continue Learning + Daily Challenge Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Continue Learning Card */}
+        <div className="lg:col-span-2 bg-white dark:bg-[#14203D] rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xs flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-[#3867E8] uppercase tracking-wider flex items-center gap-1.5">
+                <Play className="w-3.5 h-3.5 fill-[#3867E8]" />
+                চালিয়ে যান (Continue Learning)
               </span>
-              <span className="text-xs text-slate-500 font-medium">
-                {activeSubInfo.nameBn} ({activeSubInfo.nameEn})
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-lg bg-[#142B52]/10 dark:bg-white/10 text-[#142B52] dark:text-white">
+                {activeSubInfo.nameBn}
               </span>
             </div>
-            <h3 className="text-base md:text-lg font-bold text-slate-900">
-              {activeSubInfo.nameBn} বিষয়ে কুইজ ও গুরুত্বপূর্ণ প্রশ্নোত্তর চর্চা
+
+            <h3 className="text-base md:text-lg font-extrabold text-[#142B52] dark:text-white mt-2">
+              {activeSubInfo.nameBn} ({activeSubInfo.nameEn}) প্রস্তুতি
             </h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
               {activeSubInfo.description}
             </p>
           </div>
+
+          <div className="pt-2 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => onSelectTab("quiz")}
+              className="px-5 py-2.5 rounded-xl bg-[#3867E8] hover:bg-[#2752CA] text-white text-xs font-bold shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span>কুইজ অনুশীলন করুন</span>
+            </button>
+
+            <button
+              onClick={() => onSelectTab("questions")}
+              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <BookMarked className="w-4 h-4 text-[#18A889]" />
+              <span>সাজেশন ও প্রশ্ন সম্ভার</span>
+            </button>
+
+            <button
+              onClick={() => onSelectTab("notes")}
+              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer"
+            >
+              <FileText className="w-4 h-4 text-purple-500" />
+              <span>আমার নোটস</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Daily Quiz Challenge Widget */}
+        <div className="bg-gradient-to-br from-[#142B52] to-[#1E3A6C] text-white rounded-3xl p-6 shadow-md flex flex-col justify-between space-y-4">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold border border-amber-400/30">
+              <Zap className="w-3.5 h-3.5 fill-amber-300" />
+              <span>আজকের চ্যালেঞ্জ</span>
+            </div>
+
+            <h3 className="text-base font-extrabold text-white">
+              দৈনিক ১০টি স্পেশাল MCQ
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              প্রতিদিন নতুন সেট অনুশীলন করে জ্ঞান যাচাই করো ও লিডারবোর্ডে এগিয়ে থাকো।
+            </p>
+          </div>
+
           <button
             onClick={() => onSelectTab("quiz")}
-            className="px-5 py-2.5 bg-[#3867E8] hover:bg-[#2752CA] text-white font-bold rounded-xl text-xs md:text-sm shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
+            className="w-full py-2.5 rounded-xl bg-[#18A889] hover:bg-[#12836B] text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>অনুশীলন চালিয়ে যান</span>
+            <span>এখনই শুরু করো</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* Seven Subject Cards Section */}
+      {/* 7 Subject Cards Grid */}
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg md:text-xl font-bold text-[#142B52] tracking-tight">
-              মাধ্যমিকের সাতটি বিষয় (WBBSE Subjects)
+            <h2 className="text-lg md:text-xl font-extrabold text-[#142B52] dark:text-white">
+              সাতটি বিষয় (WBBSE Subjects)
             </h2>
-            <p className="text-xs text-slate-500">
-              প্রতিটি বিষয়ের জন্য আলাদা সিলেবাস ট্র্যাকার, গুরুত্বপূর্ণ প্রশ্নোত্তর ও টেস্ট পেপার সমাধান।
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              যে কোনো বিষয়ে ট্যাপ করে প্রস্তুতি ও অধ্যায়ভিত্তিক চর্চা শুরু করুন
             </p>
           </div>
-
           <button
             onClick={() => onSelectTab("syllabus")}
-            className="text-xs font-bold text-[#3867E8] hover:underline flex items-center gap-1"
+            className="text-xs font-bold text-[#3867E8] dark:text-blue-400 hover:underline flex items-center gap-1"
           >
-            <span>পূর্ণাঙ্গ সিলেবাস দেখুন</span>
+            <span>সম্পূর্ণ সিলেবাস</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {SUBJECTS.map((sub) => {
-            const chapList = SYLLABUS_MAP[sub.id] || [];
-            const completedCount = chapList.filter((c) => completedChapters[c.id]).length;
-            const progress = chapList.length > 0 ? Math.round((completedCount / chapList.length) * 100) : 0;
             const isSelected = sub.id === currentSubject;
+            const chapters = SYLLABUS_MAP[sub.id] || [];
+            const completedCount = chapters.filter((c) => completedChapters[c.id]).length;
+            const progressPct = chapters.length > 0 ? Math.round((completedCount / chapters.length) * 100) : 0;
 
             return (
               <div
                 key={sub.id}
                 onClick={() => onSelectSubject(sub.id)}
-                className={`group bg-white rounded-2xl p-5 border transition-all cursor-pointer flex flex-col justify-between hover:shadow-md ${
+                className={`group relative bg-white dark:bg-[#14203D] rounded-3xl p-5 border transition-all cursor-pointer shadow-2xs hover:shadow-md flex flex-col justify-between space-y-4 ${
                   isSelected
-                    ? "border-[#3867E8] ring-2 ring-[#3867E8]/15"
-                    : "border-slate-200/90 hover:border-slate-300"
+                    ? "border-[#3867E8] ring-2 ring-[#3867E8]/20"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
                 }`}
               >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+                <div>
+                  <div className="flex items-start justify-between">
+                    <div className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 group-hover:scale-105 transition-transform">
                       {getSubjectIcon(sub.iconName)}
                     </div>
-
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono">
-                      {chapList.length} অধ্যায়
-                    </span>
+                    {isSelected && (
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-[#18A889] text-white">
+                        সক্রিয়
+                      </span>
+                    )}
                   </div>
 
-                  <div>
-                    <h3 className="text-base font-bold text-[#142B52] group-hover:text-[#3867E8] transition-colors">
-                      {sub.nameBn}
-                    </h3>
-                    <p className="text-xs text-slate-400 font-medium">
-                      {sub.nameEn}
-                    </p>
-                  </div>
-
-                  <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                  <h3 className="text-base font-extrabold text-[#142B52] dark:text-white mt-3">
+                    {sub.nameBn}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-mono font-medium">
+                    {sub.nameEn}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                     {sub.description}
                   </p>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
-                  {/* Progress info */}
-                  <div>
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1">
-                      <span>সিলেবাস শেষ</span>
-                      <span className="font-mono text-[#18A889] font-bold">{progress}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#18A889] rounded-full transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between text-xs font-bold">
+                    <span className="text-slate-400">অগ্রগতি</span>
+                    <span className="font-mono text-[#18A889]">{progressPct}%</span>
                   </div>
 
-                  {/* Continue practice button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectSubject(sub.id);
-                      onSelectTab("quiz");
-                    }}
-                    className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                      isSelected
-                        ? "bg-[#3867E8] text-white hover:bg-[#2752CA] shadow-xs"
-                        : "bg-slate-50 text-slate-700 hover:bg-[#3867E8] hover:text-white"
-                    }`}
-                  >
-                    <span>অনুশীলন করুন</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#18A889] h-full rounded-full transition-all duration-300"
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
+
+                  <div className="pt-2 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      {chapters.length} টি অধ্যায়
+                    </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectSubject(sub.id);
+                        onSelectTab("quiz");
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-[#3867E8] text-[#3867E8] hover:text-white text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      অনুশীলন করুন
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -375,148 +445,107 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Quick Action Cards (Notion/Linear style) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* AI Tutor Card */}
-        <div
-          onClick={() => onSelectTab("tutor")}
-          className="bg-gradient-to-br from-indigo-50/60 to-blue-50/60 p-6 rounded-3xl border border-indigo-100 hover:border-indigo-300 transition-all cursor-pointer shadow-xs flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-white border border-indigo-200 text-[#3867E8] flex items-center justify-center shadow-xs">
-              <Bot className="w-5 h-5" />
+      {/* Recent Study History Preview Snippet */}
+      {recentHistory.length > 0 && (
+        <div className="bg-white dark:bg-[#14203D] rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <History className="w-4 h-4 text-[#3867E8]" />
+              <h3 className="text-sm md:text-base font-extrabold text-[#142B52] dark:text-white">
+                সাম্প্রতিক অধ্যয়নের ইতিহাস
+              </h3>
             </div>
-            <h3 className="text-base font-bold text-[#142B52]">
-              AI ডিজিটাল মাস্টারমশাই
-            </h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              যেকোনো অঙ্কের সমাধান, বিজ্ঞানের সূত্রের কারণ বা ইতিহাসের ঘটনা সহজে বুঝে নাও।
-            </p>
-          </div>
-          <div className="mt-4 flex items-center gap-1 text-xs font-bold text-[#3867E8]">
-            <span>প্রশ্ন জিজ্ঞাসা করুন</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        {/* Memory Hub Card */}
-        <div
-          onClick={() => onSelectTab("memory")}
-          className="bg-gradient-to-br from-purple-50/60 to-pink-50/60 p-6 rounded-3xl border border-purple-100 hover:border-purple-300 transition-all cursor-pointer shadow-xs flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-white border border-purple-200 text-purple-600 flex items-center justify-center shadow-xs">
-              <Brain className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-[#142B52]">
-              স্মরণিকা ও ছন্দবদ্ধ ট্রিকস
-            </h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              ধাতুর সক্রিয়তা শ্রেণি, মাইটোসিস ধাপ ও ইতিহাসের সন-তারিখ মনে রাখার কৌশল।
-            </p>
-          </div>
-          <div className="mt-4 flex items-center gap-1 text-xs font-bold text-purple-600">
-            <span>ট্রিকস ও ফ্ল্যাশকার্ড দেখুন</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        {/* Formula Book Card */}
-        <div
-          onClick={() => onSelectTab("formula_book")}
-          className="bg-gradient-to-br from-teal-50/60 to-emerald-50/60 p-6 rounded-3xl border border-teal-100 hover:border-teal-300 transition-all cursor-pointer shadow-xs flex flex-col justify-between"
-        >
-          <div className="space-y-2">
-            <div className="w-10 h-10 rounded-xl bg-white border border-teal-200 text-[#18A889] flex items-center justify-center shadow-xs">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-[#142B52]">
-              ফর্মুলা বুক ও শর্টনোটস
-            </h3>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              গণিত, ভৌতবিজ্ঞান ও ইতিহাসের প্রয়োজনীয় সকল সূত্র ও সংজ্ঞা এক ক্লিকে।
-            </p>
-          </div>
-          <div className="mt-4 flex items-center gap-1 text-xs font-bold text-[#18A889]">
-            <span>ফর্মুলা শিট খুলুন</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-      </div>
-
-      {/* Download & Installation Modal */}
-      {showDownloadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-slate-200 space-y-6 relative">
             <button
-              onClick={() => setShowDownloadModal(false)}
-              className="absolute right-5 top-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              onClick={() => onSelectTab("history")}
+              className="text-xs font-bold text-[#3867E8] hover:underline flex items-center gap-1 cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <span>সব দেখুন</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#3867E8] to-[#18A889] flex items-center justify-center text-white font-mono font-black text-xl shadow-md">
-                Zx
-              </div>
-              <div>
-                <h3 className="text-lg font-extrabold text-[#142B52]">
-                  zentix WB অ্যাপ ডাউনলোড ও ইনস্টল
-                </h3>
-                <p className="text-xs text-slate-500 font-mono">
-                  com.zentixwb.com • Android & Web
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              {/* Option 1: Direct APK Download */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#142B52] flex items-center gap-1.5 text-sm">
-                    <Download className="w-4 h-4 text-[#3867E8]" />
-                    ১. Android APK সরাসরি ডাউনলোড
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {recentHistory.slice(0, 3).map((item) => (
+              <div
+                key={item.id}
+                onClick={() => {
+                  onSelectSubject(item.subject);
+                  if (item.type === "quiz_attempt") onSelectTab("quiz");
+                  else if (item.type === "tutor_query") onSelectTab("tutor");
+                  else onSelectTab("history");
+                }}
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/80 hover:border-blue-300 cursor-pointer transition-all space-y-1.5"
+              >
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-[#142B52] dark:text-blue-300">
+                    {item.subjectNameBn}
                   </span>
-                  <span className="bg-[#18A889] text-white text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
-                    app-debug.apk
+                  <span className="text-slate-400 font-mono text-[10px]">
+                    {item.timestamp ? item.timestamp.slice(11, 16) : ""}
                   </span>
                 </div>
-                <p className="text-slate-600 leading-relaxed">
-                  GitHub Releases থেকে সরাসরি APK ডাউনলোড করে ফোনে ইনস্টল করুন:
-                </p>
+                <div className="text-xs font-extrabold text-slate-800 dark:text-white truncate">
+                  {item.title}
+                </div>
+                {item.score && (
+                  <div className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                    স্কোর: {item.score.correct}/{item.score.total}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* APK Download Modal */}
+      {showDownloadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white dark:bg-[#14203D] w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div className="px-6 py-5 bg-[#142B52] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <Smartphone className="w-5 h-5 text-amber-300" />
+                <h3 className="font-extrabold text-base">ZENTIX WB অ্যান্ড্রয়েড APK ডাউনলোড</h3>
+              </div>
+              <button
+                onClick={() => setShowDownloadModal(false)}
+                className="p-1 rounded-lg text-slate-300 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs md:text-sm text-slate-700 dark:text-slate-300">
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 space-y-1">
+                <div className="font-bold text-sm">GitHub Actions সরাসরি APK ডাউনলোড লিংক:</div>
                 <a
                   href="https://github.com/zentrixofficel-ai/Zentrix-1/releases/latest/download/app-debug.apk"
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-2.5 px-4 bg-[#3867E8] hover:bg-[#2752CA] text-white font-bold rounded-xl text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 text-blue-600 dark:text-blue-400 font-bold underline break-all mt-1"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Download app-debug.apk (Direct Link)</span>
+                  https://github.com/zentrixofficel-ai/Zentrix-1/releases/latest/download/app-debug.apk
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                 </a>
-                <p className="text-[11px] text-slate-500 italic">
-                  * ডাউনলোড শেষে ফাইলের ওপর চাপ দিয়ে "Install" বা "Allow from this source" চাপুন।
-                </p>
               </div>
 
-              {/* Option 2: 1-Click PWA Install */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-                <span className="font-bold text-[#142B52] flex items-center gap-1.5 text-sm">
-                  <Smartphone className="w-4 h-4 text-[#18A889]" />
-                  ২. কোনো APK ছাড়া হোমস্ক্রিনে ১-ক্লিকে ইনস্টল
-                </span>
-                <p className="text-slate-600 leading-relaxed">
-                  মোবাইল Chrome ব্রাউজারে উপরে ডানদিকের ৩-ডট মেনু (⋮) তে চাপুন এবং <strong>"Add to Home screen"</strong> বা <strong>"Install App"</strong> চাপুন। তৎক্ষণাৎ এটি ফোনের অ্যাপ হিসেবে ইনস্টল হয়ে যাবে।
-                </p>
+              <div className="space-y-2">
+                <div className="font-bold text-slate-900 dark:text-white">সহজ ৩টি ধাপ:</div>
+                <ol className="list-decimal pl-5 space-y-1 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <li>প্রজেক্টটি আপনার GitHub রিপোজিটরিতে পুশ করুন: <code className="font-mono font-bold text-slate-800 dark:text-slate-200">zentrixofficel-ai/Zentrix-1</code></li>
+                  <li>GitHub Actions-এ স্বয়ংক্রিয়ভাবে Android Gradle বিল্ড শুরু হবে এবং APK রিলিজ হবে।</li>
+                  <li>বিল্ড সম্পন্ন হলে উপরের ডাউনলোড লিংকে ক্লিক করে সরাসরি মোবাইলে <code className="font-mono font-bold">app-debug.apk</code> ইন্সটল করুন।</li>
+                </ol>
               </div>
-            </div>
 
-            <div className="pt-2 text-center">
-              <button
-                onClick={() => setShowDownloadModal(false)}
-                className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors"
-              >
-                বন্ধ করুন
-              </button>
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setShowDownloadModal(false)}
+                  className="px-5 py-2 rounded-xl bg-[#142B52] hover:bg-[#1E3A6C] text-white font-bold text-xs cursor-pointer"
+                >
+                  বুঝেছি
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -1,0 +1,16 @@
+{
+  "short_name": "Zx",
+  "name": "zentix WB - WBBSE Class 10",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#F5F7FB",
+  "theme_color": "#142B52",
+  "display": "standalone",
+  "orientation": "portrait"
+}

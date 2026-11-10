@@ -1,0 +1,6 @@
+{
+	"appId": "com.zentixwb.com",
+	"appName": "zentix WB",
+	"webDir": "dist",
+	"bundledWebRuntime": false
+}

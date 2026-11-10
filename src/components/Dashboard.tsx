@@ -22,6 +22,10 @@ import {
   Scroll,
   Globe,
   Languages,
+  Download,
+  Smartphone,
+  ExternalLink,
+  X,
 } from "lucide-react";
 
 interface DashboardProps {
@@ -41,6 +45,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   streakDays,
   dailyGoal = 15,
 }) => {
+  const [showDownloadModal, setShowDownloadModal] = React.useState<boolean>(false);
   // Approximate days left for Madhyamik exam (mid-February)
   const today = new Date();
   const examYear = today.getMonth() > 2 ? today.getFullYear() + 1 : today.getFullYear();
@@ -121,6 +126,14 @@ export const Dashboard: React.FC<DashboardProps> = ({
               >
                 <Bot className="w-4 h-4 text-emerald-300" />
                 মাস্টারমশাইকে প্রশ্ন করো
+              </button>
+
+              <button
+                onClick={() => setShowDownloadModal(true)}
+                className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>অ্যাপ ডাউনলোড (APK)</span>
               </button>
             </div>
           </div>
@@ -430,6 +443,84 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Download & Installation Modal */}
+      {showDownloadModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl border border-slate-200 space-y-6 relative">
+            <button
+              onClick={() => setShowDownloadModal(false)}
+              className="absolute right-5 top-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#3867E8] to-[#18A889] flex items-center justify-center text-white font-mono font-black text-xl shadow-md">
+                Zx
+              </div>
+              <div>
+                <h3 className="text-lg font-extrabold text-[#142B52]">
+                  zentix WB অ্যাপ ডাউনলোড ও ইনস্টল
+                </h3>
+                <p className="text-xs text-slate-500 font-mono">
+                  com.zentixwb.com • Android & Web
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              {/* Option 1: Direct APK Download */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#142B52] flex items-center gap-1.5 text-sm">
+                    <Download className="w-4 h-4 text-[#3867E8]" />
+                    ১. Android APK সরাসরি ডাউনলোড
+                  </span>
+                  <span className="bg-[#18A889] text-white text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
+                    app-debug.apk
+                  </span>
+                </div>
+                <p className="text-slate-600 leading-relaxed">
+                  GitHub Releases থেকে সরাসরি APK ডাউনলোড করে ফোনে ইনস্টল করুন:
+                </p>
+                <a
+                  href="https://github.com/zentrixofficel-ai/Zentrix-1/releases/latest/download/app-debug.apk"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2.5 px-4 bg-[#3867E8] hover:bg-[#2752CA] text-white font-bold rounded-xl text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download app-debug.apk (Direct Link)</span>
+                </a>
+                <p className="text-[11px] text-slate-500 italic">
+                  * ডাউনলোড শেষে ফাইলের ওপর চাপ দিয়ে "Install" বা "Allow from this source" চাপুন।
+                </p>
+              </div>
+
+              {/* Option 2: 1-Click PWA Install */}
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                <span className="font-bold text-[#142B52] flex items-center gap-1.5 text-sm">
+                  <Smartphone className="w-4 h-4 text-[#18A889]" />
+                  ২. কোনো APK ছাড়া হোমস্ক্রিনে ১-ক্লিকে ইনস্টল
+                </span>
+                <p className="text-slate-600 leading-relaxed">
+                  মোবাইল Chrome ব্রাউজারে উপরে ডানদিকের ৩-ডট মেনু (⋮) তে চাপুন এবং <strong>"Add to Home screen"</strong> বা <strong>"Install App"</strong> চাপুন। তৎক্ষণাৎ এটি ফোনের অ্যাপ হিসেবে ইনস্টল হয়ে যাবে।
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 text-center">
+              <button
+                onClick={() => setShowDownloadModal(false)}
+                className="px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition-colors"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

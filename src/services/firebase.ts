@@ -18,24 +18,13 @@ import {
   collection,
   getDocs,
   deleteDoc,
-  query,
-  orderBy,
-  limit,
+  getDocFromServer,
 } from "firebase/firestore";
 import { UserAuthProfile, HistoryItem, StudyNote, BookmarkItem } from "../types";
-
-// Firebase configuration can be provided via environment variables or AI Studio setup
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "",
-};
+import firebaseConfig from "../../firebase-applet-config.json";
 
 export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.projectId
+  firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId
 );
 
 let app: FirebaseApp | null = null;
@@ -46,7 +35,13 @@ if (isFirebaseConfigured) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
-    db = getFirestore(app);
+    // Passing firestoreDatabaseId is critical for custom database instances
+    db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+
+    // Initial connection test as mandated by Firestore integration guidelines
+    getDocFromServer(doc(db, "test", "connection")).catch((err) => {
+      // Connection checked; offline or initial read is non-fatal
+    });
   } catch (err) {
     console.warn("Firebase initialization skipped or failed:", err);
   }
@@ -54,11 +49,15 @@ if (isFirebaseConfigured) {
 
 // Guest user profile generator
 export const createGuestProfile = (name?: string): UserAuthProfile => {
-  const guestId = "guest_" + (localStorage.getItem("wbbse_guest_id") || Math.random().toString(36).substring(2, 9));
+  const guestId =
+    "guest_" +
+    (localStorage.getItem("wbbse_guest_id") ||
+      Math.random().toString(36).substring(2, 9));
   localStorage.setItem("wbbse_guest_id", guestId);
   return {
     uid: guestId,
-    displayName: name || localStorage.getItem("wbbse_student_name") || "মাধ্যমিক পরীক্ষার্থী",
+    displayName:
+      name || localStorage.getItem("wbbse_student_name") || "মাধ্যমিক পরীক্ষার্থী",
     isGuest: true,
     avatarEmoji: "🎓",
     targetYear: 2026,
@@ -66,14 +65,18 @@ export const createGuestProfile = (name?: string): UserAuthProfile => {
   };
 };
 
-// Sign in with Google
+// Sign in with Google (Popup flow)
 export const signInWithGoogle = async (): Promise<UserAuthProfile | null> => {
   if (!auth) {
-    throw new Error("Firebase Auth is not configured. Please use Guest Mode or configure Firebase.");
+    throw new Error("Firebase Auth is not initialized. Please verify configuration.");
   }
   const provider = new GoogleAuthProvider();
+  // Prompt user to select account
+  provider.setCustomParameters({ prompt: "select_account" });
+
   const result = await signInWithPopup(auth, provider);
   const user = result.user;
+
   const profile: UserAuthProfile = {
     uid: user.uid,
     displayName: user.displayName || "ছাত্র/ছাত্রী",
@@ -85,7 +88,7 @@ export const signInWithGoogle = async (): Promise<UserAuthProfile | null> => {
     classGrade: "Class 10 (Madhyamik)",
   };
 
-  // Sync profile to Firestore if available
+  // Sync profile to Firestore
   if (db) {
     try {
       await setDoc(doc(db, "users", user.uid), profile, { merge: true });
@@ -104,7 +107,8 @@ export const signInAsGuest = async (): Promise<UserAuthProfile> => {
       const result = await signInAnonymously(auth);
       return {
         uid: result.user.uid,
-        displayName: localStorage.getItem("wbbse_student_name") || "অতিথি পরীক্ষার্থী",
+        displayName:
+          localStorage.getItem("wbbse_student_name") || "অতিথি পরীক্ষার্থী",
         isGuest: true,
         avatarEmoji: "🎓",
         targetYear: 2026,
@@ -124,7 +128,31 @@ export const logoutUser = async (): Promise<void> => {
   }
 };
 
-// Sync item to Firestore if active
+// Listen to Auth State changes
+export const subscribeToAuthChanges = (
+  callback: (userProfile: UserAuthProfile | null) => void
+) => {
+  if (!auth) return () => {};
+  return onAuthStateChanged(auth, async (user) => {
+    if (user && !user.isAnonymous) {
+      const profile: UserAuthProfile = {
+        uid: user.uid,
+        displayName: user.displayName || "ছাত্র/ছাত্রী",
+        email: user.email || undefined,
+        photoURL: user.photoURL || undefined,
+        isGuest: false,
+        avatarEmoji: "🌟",
+        targetYear: 2026,
+        classGrade: "Class 10 (Madhyamik)",
+      };
+      callback(profile);
+    } else {
+      callback(null);
+    }
+  });
+};
+
+// Sync item to Firestore
 export const syncHistoryToCloud = async (uid: string, item: HistoryItem) => {
   if (!db || !uid || uid.startsWith("guest_")) return;
   try {

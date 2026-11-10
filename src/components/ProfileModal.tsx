@@ -172,10 +172,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             {userProfile.isGuest ? (
               <button
                 onClick={onLoginGoogle}
-                className="w-full mt-2 py-2 px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold flex items-center justify-center gap-2 shadow-2xs transition-colors cursor-pointer"
+                className="w-full mt-2 py-2.5 px-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold flex items-center justify-center gap-2 shadow-2xs transition-colors cursor-pointer"
               >
                 <LogIn className="w-4 h-4 text-[#3867E8]" />
-                <span>Google দিয়ে সাইন ইন করুন</span>
+                <span>Google দিয়ে সাইন ইন / সাইন আপ করুন</span>
               </button>
             ) : (
               <div className="flex items-center justify-between pt-1">

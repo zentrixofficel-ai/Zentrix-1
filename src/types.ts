@@ -163,3 +163,11 @@ export interface UserAuthProfile {
   targetYear: number;
   classGrade: string;
 }
+
+export interface NotificationPreferences {
+  dailyReminder: boolean;
+  quizAlerts: boolean;
+  examCountdown: boolean;
+  soundEffects: boolean;
+  streakProtection: boolean;
+}

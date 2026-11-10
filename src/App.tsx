@@ -12,6 +12,7 @@ import {
   BookmarkItem,
   AppNotification,
   UserAuthProfile,
+  NotificationPreferences,
 } from "./types";
 import { Sidebar } from "./components/Sidebar";
 import { BottomNav } from "./components/BottomNav";
@@ -35,6 +36,7 @@ import {
   createGuestProfile,
   signInWithGoogle,
   logoutUser,
+  subscribeToAuthChanges,
   syncHistoryToCloud,
   syncNoteToCloud,
   deleteNoteFromCloud,
@@ -104,6 +106,45 @@ export default function App() {
       console.error(e);
     }
   }, [userProfile]);
+
+  // Auth listener for Google sign-in
+  useEffect(() => {
+    const unsubscribe = subscribeToAuthChanges((profile) => {
+      if (profile) {
+        setUserProfile(profile);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Notification Preferences (On/Off options)
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPreferences>(() => {
+    try {
+      const saved = localStorage.getItem("zentix_notif_prefs");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return {
+      dailyReminder: true,
+      quizAlerts: true,
+      examCountdown: true,
+      soundEffects: true,
+      streakProtection: true,
+    };
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("zentix_notif_prefs", JSON.stringify(notificationPrefs));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [notificationPrefs]);
+
+  const handleUpdateNotificationPrefs = (updated: Partial<NotificationPreferences>) => {
+    setNotificationPrefs((prev) => ({ ...prev, ...updated }));
+  };
 
   // Language preference: "both" (Bilingual), "bengali", or "english"
   const [langMode, setLangMode] = useState<"bengali" | "english" | "both">(() => {
@@ -674,6 +715,11 @@ export default function App() {
               dailyGoal={dailyGoal}
               onChangeDailyGoal={setDailyGoal}
               onResetQuizScore={handleResetQuizScore}
+              userProfile={userProfile}
+              onLoginGoogle={handleLoginGoogle}
+              onLogout={handleLogout}
+              notificationPrefs={notificationPrefs}
+              onUpdateNotificationPrefs={handleUpdateNotificationPrefs}
             />
           )}
         </main>

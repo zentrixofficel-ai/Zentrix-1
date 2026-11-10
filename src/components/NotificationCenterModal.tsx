@@ -143,6 +143,22 @@ export const NotificationCenterModal: React.FC<NotificationCenterModalProps> = (
             ))
           )}
         </div>
+
+        {/* Footer with Notification Settings link */}
+        <div className="p-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+          <span className="text-slate-500 dark:text-slate-400 text-[11px]">
+            বিজ্ঞপ্তি চালু/বন্ধ করতে চান?
+          </span>
+          <button
+            onClick={() => {
+              onSelectTab("settings");
+              onClose();
+            }}
+            className="text-xs font-bold text-[#3867E8] dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            <span>বিজ্ঞপ্তি ও পারমিশন সেটিংস →</span>
+          </button>
+        </div>
       </div>
     </div>
   );

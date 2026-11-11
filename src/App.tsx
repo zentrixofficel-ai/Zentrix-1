@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   NavTab,
   SubjectId,
@@ -13,6 +13,10 @@ import {
   AppNotification,
   UserAuthProfile,
   NotificationPreferences,
+  StudentClass,
+  SubjectInfo,
+  QuestionPaperItem,
+  ImportantQuestionRecord,
 } from "./types";
 import { Sidebar } from "./components/Sidebar";
 import { BottomNav } from "./components/BottomNav";
@@ -28,10 +32,19 @@ import { SettingsView } from "./components/SettingsView";
 import { StudyHistoryView } from "./components/StudyHistoryView";
 import { NotesView } from "./components/NotesView";
 import { BookmarksView } from "./components/BookmarksView";
+import { QuestionPaperLibraryView } from "./components/QuestionPaperLibraryView";
+import { MostImportantQuestionsView } from "./components/MostImportantQuestionsView";
+import { AdminDashboardView } from "./components/AdminDashboardView";
+import { PdfViewerModal } from "./components/PdfViewerModal";
 import { VoiceAssistantModal } from "./components/VoiceAssistantModal";
 import { NotificationCenterModal } from "./components/NotificationCenterModal";
 import { ProfileModal } from "./components/ProfileModal";
 import { SUBJECTS } from "./data/madhyamikData";
+import {
+  CLASS_6_SUBJECTS,
+  INITIAL_QUESTION_PAPERS,
+  MOST_IMPORTANT_QUESTIONS_DATA,
+} from "./data/questionPapersData";
 import {
   createGuestProfile,
   signInWithGoogle,
@@ -52,12 +65,193 @@ import {
   Flame,
   User,
   Languages,
+  GraduationCap,
+  FileText,
+  Sparkles,
+  BookMarked,
 } from "lucide-react";
 
 export default function App() {
   const [currentSubject, setCurrentSubject] = useState<SubjectId>("bengali");
   const [activeTab, setActiveTab] = useState<NavTab>("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
+  // Class state: "class_10" (Madhyamik) or "class_6"
+  const [currentClass, setCurrentClass] = useState<StudentClass>(() => {
+    try {
+      const saved = localStorage.getItem("zentix_student_class");
+      if (saved === "class_6" || saved === "class_10") return saved;
+      return "class_10";
+    } catch {
+      return "class_10";
+    }
+  });
+
+  // Subjects state for Class 10 and Class 6
+  const [class10Subjects, setClass10Subjects] = useState<SubjectInfo[]>(() => {
+    try {
+      const saved = localStorage.getItem("zentix_subjects_10");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return SUBJECTS;
+  });
+
+  const [class6Subjects, setClass6Subjects] = useState<SubjectInfo[]>(() => {
+    try {
+      const saved = localStorage.getItem("zentix_subjects_6");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return CLASS_6_SUBJECTS;
+  });
+
+  const activeSubjects = useMemo(() => {
+    return currentClass === "class_10" ? class10Subjects : class6Subjects;
+  }, [currentClass, class10Subjects, class6Subjects]);
+
+  // Question Papers State
+  const [questionPapers, setQuestionPapers] = useState<QuestionPaperItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("zentix_question_papers");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_QUESTION_PAPERS;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("zentix_question_papers", JSON.stringify(questionPapers));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [questionPapers]);
+
+  // Most Important Questions State
+  const [importantQuestions, setImportantQuestions] = useState<ImportantQuestionRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem("zentix_important_questions");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return MOST_IMPORTANT_QUESTIONS_DATA;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("zentix_important_questions", JSON.stringify(importantQuestions));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [importantQuestions]);
+
+  // Active PDF for In-App Viewer Modal
+  const [activePdfPaper, setActivePdfPaper] = useState<QuestionPaperItem | null>(null);
+
+  // Offline Saved Question Papers
+  const [savedOfflinePaperIds, setSavedOfflinePaperIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("zentix_offline_papers");
+      if (saved) return JSON.parse(saved);
+    } catch {
+      return [];
+    }
+  });
+
+  const handleSaveOfflinePaper = (paper: QuestionPaperItem) => {
+    setSavedOfflinePaperIds((prev) => {
+      const exists = prev.includes(paper.id);
+      const next = exists ? prev.filter((id) => id !== paper.id) : [...prev, paper.id];
+      try {
+        localStorage.setItem("zentix_offline_papers", JSON.stringify(next));
+      } catch (e) {
+        console.error(e);
+      }
+      return next;
+    });
+  };
+
+  const handleChangeClass = (newClass: StudentClass) => {
+    setCurrentClass(newClass);
+    try {
+      localStorage.setItem("zentix_student_class", newClass);
+    } catch (e) {
+      console.error(e);
+    }
+    if (newClass === "class_6") {
+      setCurrentSubject(class6Subjects[0]?.id || "bengali_6");
+    } else {
+      setCurrentSubject(class10Subjects[0]?.id || "bengali");
+    }
+  };
+
+  const handleAddQuestionPaper = (paper: QuestionPaperItem) => {
+    setQuestionPapers((prev) => [paper, ...prev]);
+  };
+
+  const handleDeleteQuestionPaper = (id: string) => {
+    setQuestionPapers((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const handleTogglePublishPaper = (id: string) => {
+    setQuestionPapers((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, isPublished: p.isPublished === false ? true : false } : p))
+    );
+  };
+
+  const handleAddImportantQuestion = (q: ImportantQuestionRecord) => {
+    setImportantQuestions((prev) => [q, ...prev]);
+  };
+
+  const handleDeleteImportantQuestion = (id: string) => {
+    setImportantQuestions((prev) => prev.filter((q) => q.id !== id));
+  };
+
+  const handleAddSubject = (subject: SubjectInfo) => {
+    if (currentClass === "class_6") {
+      setClass6Subjects((prev) => [...prev, subject]);
+      try {
+        localStorage.setItem("zentix_subjects_6", JSON.stringify([...class6Subjects, subject]));
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      setClass10Subjects((prev) => [...prev, subject]);
+      try {
+        localStorage.setItem("zentix_subjects_10", JSON.stringify([...class10Subjects, subject]));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  const handleRemoveSubject = (id: string) => {
+    if (currentClass === "class_6") {
+      setClass6Subjects((prev) => prev.filter((s) => s.id !== id));
+    } else {
+      setClass10Subjects((prev) => prev.filter((s) => s.id !== id));
+    }
+  };
+
+  const handleResetToDefaultArchive = () => {
+    setQuestionPapers(INITIAL_QUESTION_PAPERS);
+    setImportantQuestions(MOST_IMPORTANT_QUESTIONS_DATA);
+    setClass10Subjects(SUBJECTS);
+    setClass6Subjects(CLASS_6_SUBJECTS);
+    try {
+      localStorage.setItem("zentix_question_papers", JSON.stringify(INITIAL_QUESTION_PAPERS));
+      localStorage.setItem("zentix_important_questions", JSON.stringify(MOST_IMPORTANT_QUESTIONS_DATA));
+      localStorage.removeItem("zentix_subjects_10");
+      localStorage.removeItem("zentix_subjects_6");
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Modals state
   const [showVoiceModal, setShowVoiceModal] = useState<boolean>(false);
@@ -461,7 +655,7 @@ export default function App() {
     }
   };
 
-  const selectedSubject = SUBJECTS.find((s) => s.id === currentSubject) || SUBJECTS[0];
+  const selectedSubject = activeSubjects.find((s) => s.id === currentSubject) || activeSubjects[0];
 
   return (
     <div className="min-h-screen bg-[#F5F7FB] dark:bg-[#0B132B] text-[#1A2434] dark:text-[#E2E8F0] flex flex-col font-sans transition-colors duration-200">
@@ -471,6 +665,9 @@ export default function App() {
         onSelectTab={setActiveTab}
         currentSubject={currentSubject}
         onSelectSubject={setCurrentSubject}
+        currentClass={currentClass}
+        onChangeClass={handleChangeClass}
+        subjects={activeSubjects}
         langMode={langMode}
         onChangeLangMode={setLangMode}
         quizScore={quizScore}
@@ -491,17 +688,45 @@ export default function App() {
         <header className="hidden lg:flex sticky top-0 z-30 bg-white/95 dark:bg-[#14203D]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 px-8 py-3.5 items-center justify-between shadow-2xs">
           {/* Active Subject and Breadcrumb */}
           <div className="flex items-center gap-3">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#18A889] animate-pulse-subtle" />
-            <div className="text-xs font-bold text-[#142B52] dark:text-white flex items-center gap-1.5">
-              <span className="text-slate-400 font-medium">বিষয়:</span>
-              <span className="font-extrabold text-sm">{selectedSubject.nameBn}</span>
-              <span className="text-slate-400 font-medium">({selectedSubject.nameEn})</span>
+            {/* Desktop Class Switcher Pill */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-bold mr-1 border border-slate-200/60 dark:border-slate-700">
+              <button
+                onClick={() => handleChangeClass("class_6")}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                  currentClass === "class_6"
+                    ? "bg-[#18A889] text-white shadow-xs font-black"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900"
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>ষষ্ঠ শ্রেণি</span>
+              </button>
+              <button
+                onClick={() => handleChangeClass("class_10")}
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                  currentClass === "class_10"
+                    ? "bg-[#3867E8] text-white shadow-xs font-black"
+                    : "text-slate-600 dark:text-slate-300 hover:text-slate-900"
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>দশম (Madhyamik)</span>
+              </button>
             </div>
 
-            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-1" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
+
+            <span className="w-2.5 h-2.5 rounded-full bg-[#18A889] animate-pulse-subtle shrink-0" />
+            <div className="text-xs font-bold text-[#142B52] dark:text-white flex items-center gap-1.5 shrink-0">
+              <span className="text-slate-400 font-medium">বিষয়:</span>
+              <span className="font-extrabold text-sm">{selectedSubject?.nameBn}</span>
+              <span className="text-slate-400 font-medium">({selectedSubject?.nameEn})</span>
+            </div>
+
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 mx-0.5" />
 
             <div className="flex items-center gap-1.5 overflow-x-auto">
-              {SUBJECTS.map((sub) => {
+              {activeSubjects.map((sub) => {
                 const isSelected = sub.id === currentSubject;
                 return (
                   <button
@@ -606,6 +831,9 @@ export default function App() {
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 md:p-8 pb-28 lg:pb-12">
           {activeTab === "dashboard" && (
             <Dashboard
+              currentClass={currentClass}
+              onChangeClass={handleChangeClass}
+              subjects={activeSubjects}
               currentSubject={currentSubject}
               onSelectSubject={setCurrentSubject}
               onSelectTab={setActiveTab}
@@ -616,6 +844,55 @@ export default function App() {
               userProfile={userProfile}
               onOpenVoiceAssistant={() => setShowVoiceModal(true)}
               onOpenProfile={() => setShowProfileModal(true)}
+            />
+          )}
+
+          {activeTab === "question_papers" && (
+            <QuestionPaperLibraryView
+              currentClass={currentClass}
+              onChangeClass={handleChangeClass}
+              subjects={activeSubjects}
+              questionPapers={questionPapers}
+              onOpenPdfViewer={(paper) => setActivePdfPaper(paper)}
+              onSaveOffline={handleSaveOfflinePaper}
+              savedOfflineIds={savedOfflinePaperIds}
+            />
+          )}
+
+          {activeTab === "important_questions" && (
+            <MostImportantQuestionsView
+              currentClass={currentClass}
+              onChangeClass={handleChangeClass}
+              subjects={activeSubjects}
+              questions={importantQuestions}
+              onAddBookmark={(title, content, subject) => {
+                handleAddBookmark({
+                  id: "bm_" + Date.now(),
+                  type: "question",
+                  title,
+                  content,
+                  subject: subject as SubjectId,
+                  createdAt: new Date().toISOString(),
+                });
+              }}
+            />
+          )}
+
+          {activeTab === "admin_panel" && (
+            <AdminDashboardView
+              currentClass={currentClass}
+              onChangeClass={handleChangeClass}
+              subjects={activeSubjects}
+              onAddSubject={handleAddSubject}
+              onRemoveSubject={handleRemoveSubject}
+              questionPapers={questionPapers}
+              onAddQuestionPaper={handleAddQuestionPaper}
+              onDeleteQuestionPaper={handleDeleteQuestionPaper}
+              onTogglePublishPaper={handleTogglePublishPaper}
+              importantQuestions={importantQuestions}
+              onAddImportantQuestion={handleAddImportantQuestion}
+              onDeleteImportantQuestion={handleDeleteImportantQuestion}
+              onResetToDefaultArchive={handleResetToDefaultArchive}
             />
           )}
 
@@ -769,6 +1046,14 @@ export default function App() {
           onLoginGoogle={handleLoginGoogle}
           onLogout={handleLogout}
           isCloudConnected={isFirebaseConfigured && !userProfile.isGuest}
+        />
+
+        {/* In-App PDF Viewer & Question Paper Reader Modal */}
+        <PdfViewerModal
+          paper={activePdfPaper}
+          onClose={() => setActivePdfPaper(null)}
+          onSaveOffline={handleSaveOfflinePaper}
+          isSavedOffline={activePdfPaper ? savedOfflinePaperIds.includes(activePdfPaper.id) : false}
         />
 
         {/* Footer */}

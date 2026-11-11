@@ -1,3 +1,5 @@
+export type StudentClass = "class_6" | "class_10";
+
 export type SubjectId =
   | "bengali"
   | "english"
@@ -5,10 +7,19 @@ export type SubjectId =
   | "physical_science"
   | "life_science"
   | "history"
-  | "geography";
+  | "geography"
+  | "bengali_6"
+  | "english_6"
+  | "mathematics_6"
+  | "science_6"
+  | "history_6"
+  | "geography_6"
+  | string;
 
 export type NavTab =
   | "dashboard"
+  | "question_papers"
+  | "important_questions"
   | "quiz"
   | "questions"
   | "tutor"
@@ -19,10 +30,87 @@ export type NavTab =
   | "history"
   | "notes"
   | "bookmarks"
-  | "settings";
+  | "settings"
+  | "admin_panel";
+
+export type ExamType =
+  | "board_final"
+  | "test_exam"
+  | "model_paper"
+  | "mock_test"
+  | "suggestion"
+  | "chapter_wise"
+  | "summative_1"
+  | "summative_2"
+  | "summative_3"
+  | "half_yearly"
+  | "annual";
+
+export type VerificationStatus =
+  | "verified_board"
+  | "verified_school"
+  | "model_paper"
+  | "expert_suggestion";
+
+export interface QuestionPaperItem {
+  id: string;
+  classId: StudentClass;
+  subjectId: string;
+  subjectNameBn: string;
+  year: number;
+  examType: ExamType;
+  examTypeNameBn: string;
+  title: string;
+  description: string;
+  pdfUrl?: string;
+  fileSize: string;
+  source: string;
+  verificationStatus: VerificationStatus;
+  isAvailable: boolean;
+  totalMarks: number;
+  durationMinutes: number;
+  uploadedAt: string;
+  isPublished?: boolean;
+  sections?: {
+    name: string;
+    instructions?: string;
+    marks: number;
+    questions: {
+      num: string;
+      text: string;
+      marks: number;
+      options?: string[];
+      answerOrHint?: string;
+    }[];
+  }[];
+}
+
+export interface ImportantQuestionRecord {
+  id: string;
+  classId: StudentClass;
+  subjectId: string;
+  subjectNameBn: string;
+  chapter: string;
+  category:
+    | "very_important"
+    | "important"
+    | "frequently_practised"
+    | "previous_year"
+    | "exam_prep"
+    | "chapter_wise";
+  categoryNameBn: string;
+  marks: number;
+  questionType: "mcq" | "saq" | "analytical" | "descriptive";
+  question: string;
+  solution: string;
+  difficulty: "easy" | "medium" | "hard";
+  year?: number;
+  source?: string;
+}
 
 export interface SubjectInfo {
   id: SubjectId;
+  classId?: StudentClass;
   nameEn: string;
   nameBn: string;
   iconName: string;

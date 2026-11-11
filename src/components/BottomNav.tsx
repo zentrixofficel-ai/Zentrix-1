@@ -20,10 +20,10 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenMenu,
 }) => {
   const items = [
-    { id: "dashboard" as NavTab, label: "Home", icon: LayoutDashboard },
-    { id: "quiz" as NavTab, label: "Quiz", icon: HelpCircle },
-    { id: "tutor" as NavTab, label: "AI Tutor", icon: Bot },
-    { id: "notes" as NavTab, label: "Notes", icon: FileText },
+    { id: "dashboard" as NavTab, label: "হোম", icon: LayoutDashboard },
+    { id: "question_papers" as NavTab, label: "প্রশ্নপত্র", icon: FileText },
+    { id: "quiz" as NavTab, label: "কুইজ", icon: HelpCircle },
+    { id: "tutor" as NavTab, label: "AI টিউটর", icon: Bot },
   ];
 
   return (

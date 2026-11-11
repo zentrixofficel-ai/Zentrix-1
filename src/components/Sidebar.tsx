@@ -1,6 +1,5 @@
 import React from "react";
-import { NavTab, SubjectId, UserAuthProfile } from "../types";
-import { SUBJECTS } from "../data/madhyamikData";
+import { NavTab, SubjectId, UserAuthProfile, StudentClass, SubjectInfo } from "../types";
 import {
   LayoutDashboard,
   HelpCircle,
@@ -25,6 +24,10 @@ import {
   Sun,
   FileText,
   Sparkles,
+  Shield,
+  Layers,
+  GraduationCap,
+  Download,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -32,6 +35,9 @@ interface SidebarProps {
   onSelectTab: (tab: NavTab) => void;
   currentSubject: SubjectId;
   onSelectSubject: (sub: SubjectId) => void;
+  currentClass: StudentClass;
+  onChangeClass: (cls: StudentClass) => void;
+  subjects: SubjectInfo[];
   langMode: "bengali" | "english" | "both";
   onChangeLangMode: (lang: "bengali" | "english" | "both") => void;
   quizScore: { correct: number; total: number };
@@ -51,6 +57,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   currentSubject,
   onSelectSubject,
+  currentClass,
+  onChangeClass,
+  subjects,
   langMode,
   onChangeLangMode,
   quizScore,
@@ -72,8 +81,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
     badge?: string;
   }[] = [
     { id: "dashboard", labelBn: "ড্যাশবোর্ড", labelEn: "Dashboard", icon: LayoutDashboard },
+    {
+      id: "question_papers",
+      labelBn: "প্রশ্নপত্র সংগ্রহশালা",
+      labelEn: "All Question Papers",
+      icon: FileText,
+      badge: "PDF",
+    },
+    {
+      id: "important_questions",
+      labelBn: "অতি গুরুত্বপূর্ণ প্রশ্ন",
+      labelEn: "Most Important Questions",
+      icon: BookMarked,
+      badge: "V.I.P",
+    },
     { id: "quiz", labelBn: "অনুশীলন কুইজ", labelEn: "Practice Quiz", icon: HelpCircle, badge: "MCQ" },
-    { id: "questions", labelBn: "প্রশ্ন সম্ভার", labelEn: "Question Bank", icon: BookMarked },
     { id: "tutor", labelBn: "AI মাস্টারমশাই", labelEn: "AI Tutor", icon: Bot, badge: "AI" },
     { id: "evaluator", labelBn: "উত্তরপত্র মূল্যায়ন", labelEn: "Answer Evaluator", icon: FileCheck },
     { id: "memory", labelBn: "স্মরণিকা ও ট্রিকস", labelEn: "Memory Hub", icon: Brain },
@@ -91,7 +113,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: "history", labelBn: "অধ্যয়ন ইতিহাস", labelEn: "Study History", icon: History },
     { id: "notes", labelBn: "স্টাডি নোটস", labelEn: "Notes", icon: FileText },
     { id: "bookmarks", labelBn: "সংরক্ষিত বুকমার্ক", labelEn: "Bookmarks", icon: Bookmark },
-    { id: "settings", labelBn: "সেটিংস", labelEn: "Settings", icon: Settings },
+    { id: "admin_panel", labelBn: "অ্যাডমিন প্যানেল", labelEn: "Admin Panel", icon: Shield, badge: "Admin" },
+    { id: "settings", labelBn: "সেটিংস ও কন্ট্রোল", labelEn: "Settings", icon: Settings },
   ];
 
   const accuracy = quizScore.total > 0 ? Math.round((quizScore.correct / quizScore.total) * 100) : 0;
@@ -104,8 +127,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       {/* Mobile Top App Bar */}
-      <div className="lg:hidden sticky top-0 z-40 bg-[#142B52] dark:bg-[#0D1C36] text-white px-4 py-3 flex items-center justify-between border-b border-[#1E3A6C] shadow-sm">
-        <div className="flex items-center gap-2.5">
+      <div className="lg:hidden sticky top-0 z-40 bg-[#142B52] dark:bg-[#0D1C36] text-white px-3.5 py-2.5 flex items-center justify-between border-b border-[#1E3A6C] shadow-sm">
+        <div className="flex items-center gap-2">
           <button
             onClick={onToggleMobileMenu}
             className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
@@ -114,22 +137,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleNavClick("dashboard")}>
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#3867E8] to-[#18A889] flex items-center justify-center text-white font-black text-sm shadow-xs font-mono tracking-tighter">
+          <div
+            className="flex items-center gap-1.5 cursor-pointer"
+            onClick={() => handleNavClick("dashboard")}
+          >
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#3867E8] to-[#18A889] flex items-center justify-center text-white font-black text-xs shadow-xs font-mono tracking-tighter">
               Zx
             </div>
             <div>
-              <div className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+              <div className="text-xs font-bold tracking-tight text-white flex items-center gap-1">
                 <span>ZENTIX WB</span>
-                <span className="text-[9px] bg-[#18A889] text-white px-1 py-0.2 rounded font-semibold font-mono">
-                  Zx
-                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Mobile Quick Class Switcher Pill */}
+        <div className="flex items-center gap-1 bg-white/10 rounded-xl p-0.5 text-[11px] font-bold">
+          <button
+            onClick={() => onChangeClass("class_6")}
+            className={`px-2 py-0.5 rounded-lg transition-all ${
+              currentClass === "class_6" ? "bg-[#18A889] text-white shadow-xs" : "text-slate-300"
+            }`}
+          >
+            ষষ্ঠ
+          </button>
+          <button
+            onClick={() => onChangeClass("class_10")}
+            className={`px-2 py-0.5 rounded-lg transition-all ${
+              currentClass === "class_10" ? "bg-[#3867E8] text-white shadow-xs" : "text-slate-300"
+            }`}
+          >
+            মাধ্যমিক
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5">
           {/* Notifications Bell */}
           <button
             onClick={onOpenNotifications}
@@ -143,12 +186,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             )}
           </button>
-
-          {/* Daily Streak */}
-          <div className="flex items-center gap-1 bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full text-xs font-semibold border border-amber-400/30 font-mono">
-            <Flame className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-            <span>{streakDays}d</span>
-          </div>
 
           {/* Profile Avatar */}
           <button
@@ -220,13 +257,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
 
+            {/* Class Switcher inside Drawer */}
+            <div className="mt-4 p-1.5 rounded-2xl bg-[#0D1C36]/90 border border-[#1E3A6C] flex items-center gap-1 text-xs">
+              <button
+                onClick={() => onChangeClass("class_6")}
+                className={`flex-1 py-1.5 rounded-xl font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  currentClass === "class_6"
+                    ? "bg-[#18A889] text-white shadow-xs font-black"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>ষষ্ঠ শ্রেণি (Class 6)</span>
+              </button>
+
+              <button
+                onClick={() => onChangeClass("class_10")}
+                className={`flex-1 py-1.5 rounded-xl font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  currentClass === "class_10"
+                    ? "bg-[#3867E8] text-white shadow-xs font-black"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>দশম (Madhyamik)</span>
+              </button>
+            </div>
+
             {/* Student Profile Quick Strip */}
             <div
               onClick={() => {
                 onOpenProfile();
                 if (mobileMenuOpen) onToggleMobileMenu();
               }}
-              className="mt-4 p-2.5 rounded-2xl bg-[#0D1C36]/80 dark:bg-black/30 border border-[#1E3A6C] flex items-center justify-between cursor-pointer hover:border-[#3867E8] transition-colors"
+              className="mt-3 p-2.5 rounded-2xl bg-[#0D1C36]/80 dark:bg-black/30 border border-[#1E3A6C] flex items-center justify-between cursor-pointer hover:border-[#3867E8] transition-colors"
             >
               <div className="flex items-center gap-2.5">
                 <span className="text-xl">{userProfile.avatarEmoji || "🎓"}</span>
@@ -235,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {userProfile.displayName}
                   </div>
                   <div className="text-[10px] text-slate-400 font-mono">
-                    {userProfile.isGuest ? "অতিথি মোড" : "ক্লাউড সিঙ্ক"} • {userProfile.targetYear}
+                    {userProfile.isGuest ? "অতিথি মোড" : "ক্লাউড সিঙ্ক"} • {currentClass === "class_6" ? "Class 6" : "Madhyamik"}
                   </div>
                 </div>
               </div>
@@ -250,7 +314,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Primary Navigation */}
           <div className="p-3 space-y-1">
             <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-              মূল মেন্যু (Core)
+              মূল মেন্যু (Core Library)
             </div>
 
             {primaryNavItems.map((item) => {
@@ -260,7 +324,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                     isActive
                       ? "bg-gradient-to-r from-[#3867E8] to-[#2752CA] text-white shadow-sm"
                       : "text-slate-300 hover:bg-white/10 hover:text-white"
@@ -277,7 +341,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         className={`text-[9px] px-1.5 py-0.2 rounded font-extrabold uppercase font-mono ${
                           isActive
                             ? "bg-white/20 text-white"
-                            : item.badge === "AI"
+                            : item.badge === "PDF"
+                            ? "bg-amber-400 text-slate-950 font-black"
+                            : item.badge === "V.I.P"
                             ? "bg-[#18A889] text-white"
                             : "bg-[#3867E8]/30 text-blue-200"
                         }`}
@@ -295,7 +361,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Secondary Tools Navigation */}
           <div className="p-3 pt-0 space-y-1">
             <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-              স্টাডি টুলস ও তথ্য (Tools)
+              স্টাডি টুলস ও অ্যাডমিন (Tools & Admin)
             </div>
 
             {secondaryNavItems.map((item) => {
@@ -316,7 +382,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span>{item.labelBn}</span>
                   </div>
 
-                  {isActive && <ChevronRight className="w-3.5 h-3.5" />}
+                  <div className="flex items-center gap-1.5">
+                    {item.badge && (
+                      <span className="text-[9px] px-1.5 py-0.2 rounded font-mono font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                        {item.badge}
+                      </span>
+                    )}
+                    {isActive && <ChevronRight className="w-3.5 h-3.5" />}
+                  </div>
                 </button>
               );
             })}
@@ -339,33 +412,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </span>
               )}
             </button>
-
-            {/* Profile Item in Drawer */}
-            <button
-              onClick={() => {
-                onOpenProfile();
-                if (mobileMenuOpen) onToggleMobileMenu();
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <User className="w-4 h-4 text-slate-400" />
-                <span>প্রোফাইল বিবরণী</span>
-              </div>
-              <span className="text-[11px] text-slate-400 font-mono">
-                {userProfile.isGuest ? "Guest" : "User"}
-              </span>
-            </button>
           </div>
 
-          {/* Subjects List Shortcut */}
+          {/* Current Class Subjects List */}
           <div className="p-3 pt-0 space-y-1">
-            <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
-              সাতটি বিষয় (WBBSE Subjects)
+            <div className="px-3 py-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+              <span>{currentClass === "class_6" ? "ষষ্ঠ শ্রেণির বিষয়" : "মাধ্যমিকের বিষয়সমূহ"}</span>
+              <span className="font-mono text-[9px] text-[#18A889]">({subjects.length})</span>
             </div>
 
             <div className="grid grid-cols-2 gap-1 px-1">
-              {SUBJECTS.map((sub) => {
+              {subjects.map((sub) => {
                 const isSelected = sub.id === currentSubject;
                 return (
                   <button
@@ -400,18 +457,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {userProfile.isGuest ? (
               <>
                 <LogIn className="w-3.5 h-3.5 text-[#3867E8]" />
-                <span className="font-bold">সাইন ইন করুন</span>
+                <span className="font-bold">Google সাইন ইন</span>
               </>
             ) : (
               <>
                 <LogOut className="w-3.5 h-3.5 text-rose-400" />
-                <span className="font-bold">সাইন আউট</span>
+                <span className="font-bold">লগআউট</span>
               </>
             )}
           </button>
 
           <div className="text-[10px] font-mono text-slate-400">
-            v2.0 • ZENTIX WB
+            v3.0 • ZENTIX WB
           </div>
         </div>
       </aside>

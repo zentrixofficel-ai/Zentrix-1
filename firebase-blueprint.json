@@ -65,6 +65,43 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "type", "title", "content", "subject", "createdAt"]
+    },
+    "question_papers": {
+      "title": "QuestionPaperItem",
+      "description": "Question papers library items for Class 6 and Class 10",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "year": { "type": "number" },
+        "examType": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "source": { "type": "string" },
+        "verificationStatus": { "type": "string" },
+        "fileSize": { "type": "string" },
+        "uploadedAt": { "type": "string" },
+        "isPublished": { "type": "boolean" }
+      },
+      "required": ["id", "classId", "subjectId", "year", "examType", "title"]
+    },
+    "important_questions": {
+      "title": "ImportantQuestionRecord",
+      "description": "High yield important questions with solutions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "chapter": { "type": "string" },
+        "category": { "type": "string" },
+        "marks": { "type": "number" },
+        "question": { "type": "string" },
+        "solution": { "type": "string" },
+        "difficulty": { "type": "string" }
+      },
+      "required": ["id", "classId", "subjectId", "chapter", "category", "marks", "question", "solution"]
     }
   }
 }

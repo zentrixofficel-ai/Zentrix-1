@@ -25,5 +25,15 @@ service cloud.firestore {
         allow read, write: if isOwner(userId);
       }
     }
+
+    match /question_papers/{paperId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /important_questions/{questionId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
   }
 }

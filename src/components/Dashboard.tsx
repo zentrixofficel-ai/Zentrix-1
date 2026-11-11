@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { NavTab, SubjectId, HistoryItem, UserAuthProfile } from "../types";
-import { SUBJECTS, SYLLABUS_MAP } from "../data/madhyamikData";
+import { NavTab, SubjectId, HistoryItem, UserAuthProfile, StudentClass, SubjectInfo } from "../types";
+import { SYLLABUS_MAP } from "../data/madhyamikData";
 import {
   Calendar,
   Flame,
@@ -30,9 +30,13 @@ import {
   FileText,
   Mic,
   Play,
+  GraduationCap,
 } from "lucide-react";
 
 interface DashboardProps {
+  currentClass: StudentClass;
+  onChangeClass: (cls: StudentClass) => void;
+  subjects: SubjectInfo[];
   currentSubject: SubjectId;
   onSelectSubject: (sub: SubjectId) => void;
   onSelectTab: (tab: NavTab) => void;
@@ -46,6 +50,9 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({
+  currentClass,
+  onChangeClass,
+  subjects,
   currentSubject,
   onSelectSubject,
   onSelectTab,
@@ -59,10 +66,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const [showDownloadModal, setShowDownloadModal] = useState<boolean>(false);
 
-  // Approximate days left for Madhyamik exam (mid-February)
+  // Approximate days left for Madhyamik exam (mid-February) or Class 6 summative (November)
   const today = new Date();
-  const examYear = today.getMonth() > 2 ? today.getFullYear() + 1 : today.getFullYear();
-  const examDate = new Date(examYear, 1, 10);
+  const targetMonth = currentClass === "class_10" ? 1 : 10; // Feb for Madhyamik, Nov for Class 6
+  const targetDay = currentClass === "class_10" ? 10 : 25;
+  const examYear = today.getMonth() > targetMonth ? today.getFullYear() + 1 : today.getFullYear();
+  const examDate = new Date(examYear, targetMonth, targetDay);
   const diffTime = examDate.getTime() - today.getTime();
   const daysLeft = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
@@ -76,7 +85,17 @@ export const Dashboard: React.FC<DashboardProps> = ({
   }
 
   // Active current subject info
-  const activeSubInfo = SUBJECTS.find((s) => s.id === currentSubject) || SUBJECTS[0];
+  const activeSubInfo = subjects.find((s) => s.id === currentSubject) || subjects[0] || {
+    id: "bengali",
+    nameBn: "বাংলা",
+    nameEn: "Bengali",
+    description: "ভাষা ও সাহিত্য পাঠ",
+    iconName: "BookOpen",
+    color: "from-blue-600 to-indigo-700",
+    bgLight: "bg-blue-50",
+    badgeBg: "bg-blue-100",
+    totalChapters: 8,
+  };
 
   // Subject icon resolver
   const getSubjectIcon = (iconName: string) => {
@@ -115,7 +134,35 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <span className="font-mono bg-white/20 text-white px-1.5 py-0.2 rounded text-[10px] font-bold">
                   Zx
                 </span>
-                <span>ZENTIX WB • WBBSE দশম শ্রেণি</span>
+                <span>
+                  {currentClass === "class_10"
+                    ? "ZENTIX WB • WBBSE দশম শ্রেণি (Madhyamik)"
+                    : "ZENTIX WB • পশ্চিমবঙ্গ ষষ্ঠ শ্রেণি (Class 6)"}
+                </span>
+              </div>
+
+              {/* Class Switcher Pill */}
+              <div className="inline-flex items-center gap-1 p-0.5 rounded-full bg-white/20 backdrop-blur-md text-xs font-bold">
+                <button
+                  onClick={() => onChangeClass("class_6")}
+                  className={`px-2.5 py-0.5 rounded-full transition-all cursor-pointer ${
+                    currentClass === "class_6"
+                      ? "bg-[#18A889] text-white shadow-xs font-black"
+                      : "text-slate-200 hover:text-white"
+                  }`}
+                >
+                  ষষ্ঠ শ্রেণি
+                </button>
+                <button
+                  onClick={() => onChangeClass("class_10")}
+                  className={`px-2.5 py-0.5 rounded-full transition-all cursor-pointer ${
+                    currentClass === "class_10"
+                      ? "bg-[#3867E8] text-white shadow-xs font-black"
+                      : "text-slate-200 hover:text-white"
+                  }`}
+                >
+                  দশম শ্রেণি
+                </button>
               </div>
 
               <div
@@ -124,7 +171,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
               >
                 <span>{userProfile.avatarEmoji}</span>
                 <span>{userProfile.displayName}</span>
-                <span className="text-emerald-300 text-[10px]">({userProfile.targetYear})</span>
               </div>
             </div>
 
@@ -133,40 +179,50 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </h1>
 
             <p className="text-xs md:text-sm text-slate-200 leading-relaxed font-sans">
-              আজকের মাধ্যমিক প্রস্তুতি শুরু করো। সাতটি বিষয়ের অধ্যায়ভিত্তিক প্রশ্ন, AI মাস্টারমশাই ও ভয়েস অ্যাসিস্ট্যান্ট তোমার সাথে আছে।
+              {currentClass === "class_10"
+                ? "পশ্চিমবঙ্গ মাধ্যমিক পরীক্ষার সেরা প্রস্তুতি: ২০০০–২০২৬ প্রশ্নপত্র সংগ্রহশালা, V.I.P সাজেশন ও AI মাস্টারমশাই।"
+                : "ষষ্ঠ শ্রেণির সকল বিষয়ের ১ম, ২য় ও ৩য় পর্যায়ক্রমিক মূল্যায়ন ও বার্ষিক পরীক্ষার প্রস্তুতি ও অধ্যায়ভিত্তিক চর্চা।"}
             </p>
 
-            <div className="pt-2 flex flex-wrap items-center gap-3">
+            <div className="pt-2 flex flex-wrap items-center gap-2.5">
+              <button
+                onClick={() => onSelectTab("question_papers")}
+                className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <FileText className="w-4 h-4" />
+                <span>সকল প্রশ্নপত্র (PDF)</span>
+              </button>
+
+              <button
+                onClick={() => onSelectTab("important_questions")}
+                className="px-4 py-2.5 bg-[#18A889] hover:bg-[#12836B] text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>অতি গুরুত্বপূর্ণ প্রশ্ন</span>
+              </button>
+
               <button
                 onClick={() => onSelectTab("quiz")}
-                className="px-5 py-2.5 bg-[#18A889] hover:bg-[#12836B] text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2.5 bg-white/15 hover:bg-white/25 text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer border border-white/20"
               >
                 <Zap className="w-4 h-4 fill-white text-white" />
-                <span>দৈনিক কুইজ শুরু করুন</span>
+                <span>দৈনিক কুইজ</span>
               </button>
 
               <button
                 onClick={onOpenVoiceAssistant}
-                className="px-4 py-2.5 bg-gradient-to-r from-[#3867E8] to-[#1E3A6C] hover:opacity-95 text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer border border-white/20"
+                className="px-3.5 py-2.5 bg-gradient-to-r from-[#3867E8] to-[#1E3A6C] hover:opacity-95 text-white font-bold rounded-xl text-xs md:text-sm shadow-sm transition-all flex items-center gap-1.5 cursor-pointer border border-white/20"
               >
                 <Mic className="w-4 h-4 text-emerald-300 animate-pulse" />
-                <span>AI ভয়েস সহকারী</span>
-              </button>
-
-              <button
-                onClick={() => onSelectTab("tutor")}
-                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-xs md:text-sm backdrop-blur-sm border border-white/20 transition-all flex items-center gap-2 cursor-pointer"
-              >
-                <Bot className="w-4 h-4 text-emerald-300" />
-                <span>AI মাস্টারমশাই</span>
+                <span>ভয়েস সহায়ক</span>
               </button>
 
               <button
                 onClick={() => setShowDownloadModal(true)}
-                className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs md:text-sm transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-xs md:text-sm backdrop-blur-sm border border-white/20 transition-all flex items-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-4 h-4" />
-                <span>অ্যান্ড্রয়েড অ্যাপ (APK)</span>
+                <span>APK</span>
               </button>
             </div>
           </div>
@@ -175,7 +231,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-[#0D1C36]/85 backdrop-blur-md p-5 rounded-3xl border border-white/15 min-w-[240px] text-center space-y-3 self-start lg:self-auto shadow-xl">
             <div className="flex items-center justify-center gap-2 text-xs font-bold text-amber-300 uppercase tracking-wider">
               <Calendar className="w-4 h-4" />
-              <span>মাধ্যমিক পরীক্ষা বাকি</span>
+              <span>
+                {currentClass === "class_10" ? "মাধ্যমিক পরীক্ষা বাকি" : "পরবর্তী পর্যায়ক্রমিক মূল্যায়ন"}
+              </span>
             </div>
 
             <div className="flex items-baseline justify-center gap-2">
@@ -186,11 +244,15 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <div className="text-[11px] text-emerald-300 font-medium bg-emerald-500/15 py-1.5 px-3 rounded-xl border border-emerald-400/20">
-              ✓ লক্ষ্য: প্রতিটি বিষয়ে ৯০%+ নম্বর
+              {currentClass === "class_10"
+                ? "✓ লক্ষ্য: মাধ্যমিক প্রতিটি বিষয়ে ৯০%+ নম্বর"
+                : "✓ লক্ষ্য: পর্যায়ক্রমিক মূল্যায়নে A+ গ্রেড"}
             </div>
           </div>
         </div>
       </div>
+
+      {/* 4 Metric Stats Grid */}
 
       {/* 4 Metric Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 md:gap-5">
@@ -354,7 +416,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg md:text-xl font-extrabold text-[#142B52] dark:text-white">
-              সাতটি বিষয় (WBBSE Subjects)
+              {currentClass === "class_10"
+                ? "দশম শ্রেণির বিষয়সমূহ (WBBSE Madhyamik)"
+                : "ষষ্ঠ শ্রেণির বিষয়সমূহ (Class 6 Subjects)"}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               যে কোনো বিষয়ে ট্যাপ করে প্রস্তুতি ও অধ্যায়ভিত্তিক চর্চা শুরু করুন
@@ -370,7 +434,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {SUBJECTS.map((sub) => {
+          {subjects.map((sub) => {
             const isSelected = sub.id === currentSubject;
             const chapters = SYLLABUS_MAP[sub.id] || [];
             const completedCount = chapters.filter((c) => completedChapters[c.id]).length;
